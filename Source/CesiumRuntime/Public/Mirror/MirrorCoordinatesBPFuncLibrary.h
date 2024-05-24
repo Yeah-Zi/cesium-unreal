@@ -274,4 +274,16 @@ public:
       APlayerController const* Player,
       FVector ECEFPosition,
       FVector2D& ScreenPosition);
+
+  UFUNCTION(
+      BlueprintCallable,
+      Category = "Coordinates",
+      meta = (BlueprintAutocast))
+  static FTransform GetViewUnrealTransform(const APawn* Pawn);
+
+  UFUNCTION(
+      BlueprintCallable,
+      Category = "Coordinates",
+      meta = (BlueprintAutocast))
+  static FTransform GetViewECEFTransform(const APawn* Pawn);
 };

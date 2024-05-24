@@ -333,3 +333,22 @@ bool UMirrorCoordinatesBPFuncLibrary::ECEFToScreen(
   FVector UnrealPosition = GetECEFToUnrealTransform().TransformPosition(ECEFPosition);
   return UnrealToScreen(Player, UnrealPosition, ScreenPosition);
 }
+
+FTransform
+UMirrorCoordinatesBPFuncLibrary::GetViewUnrealTransform(const APawn* Pawn) {
+  APlayerController* Controller =
+      Cast<APlayerController>(Pawn->GetController());
+  FTransform CameraInUnrealTransform;
+  FVector Location;
+  FRotator Rotation;
+  Controller->GetPlayerViewPoint(Location, Rotation);
+  CameraInUnrealTransform.SetLocation(Location);
+  CameraInUnrealTransform.SetRotation(FQuat(Rotation));
+  return CameraInUnrealTransform;
+}
+
+FTransform
+UMirrorCoordinatesBPFuncLibrary::GetViewECEFTransform(const APawn* Pawn) {
+  return GetViewUnrealTransform(Pawn) * GetUnrealToECEFTransform();
+}
+
