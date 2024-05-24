@@ -34,10 +34,10 @@ void UMirrorMoveManagerComponent::TickComponent(
 void UMirrorMoveManagerComponent::SetActorTransforms(
     EMirrorCoordinate Coordinate,
     TArray<FTransform> Transforms,
+    const double& InMoveTime,
     FCallbackScriptDelegate StartCallBack,
     FCallbackScriptDelegate StopCallBack,
-    FCallbackScriptDelegate EndCallBack,
-    const double& InMoveTime) {
+    FCallbackScriptDelegate EndCallBack) {
 
   check(Coordinate != EMirrorCoordinate::ENU);
 

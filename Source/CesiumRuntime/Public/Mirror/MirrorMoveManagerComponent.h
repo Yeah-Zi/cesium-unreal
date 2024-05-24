@@ -88,10 +88,11 @@ public:
   void SetActorTransforms(
       EMirrorCoordinate Coordinate,
       TArray<FTransform> Transforms,
-      FCallbackScriptDelegate StartCallBack,
-      FCallbackScriptDelegate StopCallBack,
-      FCallbackScriptDelegate EndCallBack,
-      const double& InMoveTime);
+      const double& InMoveTime,
+      FCallbackScriptDelegate StartCallBack = FCallbackScriptDelegate(),
+      FCallbackScriptDelegate StopCallBack = FCallbackScriptDelegate(),
+      FCallbackScriptDelegate EndCallBack = FCallbackScriptDelegate()
+      );
 
   UFUNCTION()
   void AddActorTransforms(

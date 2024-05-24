@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Mirror/MirrorInputRegisterComponent.h"
+#include "MirrorMoveManagerComponent.h"
 #include "MirrorManipulatorInputHandler.generated.h"
 
 /**
@@ -15,6 +16,9 @@ class CESIUMRUNTIME_API UMirrorManipulatorInputHandler
   GENERATED_BODY()
 
 public:
+  UMirrorMoveManagerComponent* MirrorMoveManagerComponent;
+  virtual void BeginPlay() override;
+
   FVector2D GetControllerMousePosition();
 
   virtual void PressedAction(struct FKey key);
@@ -33,14 +37,24 @@ class CESIUMRUNTIME_API UMirrorDragInputHandler
     : public UMirrorManipulatorInputHandler {
   GENERATED_BODY()
 public:
+  UMirrorDragInputHandler();
+  virtual void BeginPlay() override;
+  virtual void BeginDestroy() override;
+  virtual void TickComponent(
+      float DeltaTime,
+      ELevelTick TickType,
+      FActorComponentTickFunction* ThisTickFunction) override;
+
   bool IsLeftMouseButtonPressed = false;
 
   double DraggingInterval = 0.2;
+  double SinceLastDrag = 0;
 
   double DraggingStartVirtualEarthRadius;
   FVector DraggingStartEarthPositionInCameraCoordinate;
   FVector DraggingNowEarthPositionInCameraCoordinate;
 
+  AVirtualEarthActor* VirtualEarthActor;
   virtual void LeftMouseButtonPressed(FVector2D MouseScreenPosition);
   virtual void LeftMouseButtonReleased(FVector2D MouseScreenPosition);
 
