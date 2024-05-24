@@ -51,10 +51,12 @@ void UMirrorManipulatorInputHandler::OnMouseMove(
     const FVector2D& MouseScreenPosition) {}
 
 UMirrorDragInputHandler::UMirrorDragInputHandler() {
-  VirtualEarthActor = GetWorld()->SpawnActor<AVirtualEarthActor>();
 }
 
-void UMirrorDragInputHandler::BeginPlay() { Super::BeginPlay(); }
+void UMirrorDragInputHandler::BeginPlay() {
+  Super::BeginPlay();
+  VirtualEarthActor = GetWorld()->SpawnActor<AVirtualEarthActor>();
+}
 
 void UMirrorDragInputHandler::BeginDestroy() {
   Super::BeginDestroy();

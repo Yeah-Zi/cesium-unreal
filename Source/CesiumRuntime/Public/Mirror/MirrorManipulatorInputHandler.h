@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Mirror/MirrorInputRegisterComponent.h"
 #include "MirrorMoveManagerComponent.h"
+#include "VirtualEarthActor.h"
 #include "MirrorManipulatorInputHandler.generated.h"
 
 /**
