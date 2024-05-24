@@ -129,7 +129,7 @@ FVector UMirrorCoordinatesBPFuncLibrary::ECEFToENULocation(
 
 FVector
 UMirrorCoordinatesBPFuncLibrary::ECEFToUnrealLocation(const FVector& Location) {
-  return FVector();
+  return GetUnrealToECEFTransform().TransformPosition(Location);
 }
 
 FVector UMirrorCoordinatesBPFuncLibrary::UnrealToENULocation(
@@ -140,7 +140,7 @@ FVector UMirrorCoordinatesBPFuncLibrary::UnrealToENULocation(
 
 FVector
 UMirrorCoordinatesBPFuncLibrary::UnrealToECEFLocation(const FVector& Location) {
-  return FVector();
+  return GetUnrealToECEFTransform().TransformPosition(Location);
 }
 
 FQuat UMirrorCoordinatesBPFuncLibrary::CalculateQuatFromAxes(
@@ -254,6 +254,33 @@ FHitResult UMirrorCoordinatesBPFuncLibrary::LineTraceVirtualEarthInUnreal(
       End,
       ECollisionChannel::ECC_GameTraceChannel3,
       Params);
+  return result;
+}
+
+FHitResult UMirrorCoordinatesBPFuncLibrary::LineTraceRealEarthInECEF(
+    FVector Start,
+    FVector End) {
+  FHitResult result = LineTraceRealEarthInUnreal(
+      ECEFToUnrealLocation(Start),
+      ECEFToUnrealLocation(End));
+
+  result.ImpactPoint = UnrealToECEFLocation(result.ImpactPoint);
+  result.ImpactNormal =
+      GetUnrealToECEFTransform().TransformVector(result.ImpactNormal);
+  result.Location = UnrealToECEFLocation(result.Location);
+
+  return result;
+}
+
+FHitResult UMirrorCoordinatesBPFuncLibrary::LineTraceRealEarthInUnreal(
+    FVector Start,
+    FVector End) {
+  FHitResult result;
+  GWorld->LineTraceSingleByChannel(
+      result,
+      Start,
+      End,
+      ECollisionChannel::ECC_Visibility);
   return result;
 }
 

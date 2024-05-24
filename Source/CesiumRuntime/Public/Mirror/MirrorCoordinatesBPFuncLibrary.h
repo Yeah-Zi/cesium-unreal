@@ -221,6 +221,22 @@ public:
       FVector Start,
       FVector End);
 
+    UFUNCTION(
+      BlueprintCallable,
+      Category = "Coordinates",
+      meta = (BlueprintAutocast))
+  static FHitResult LineTraceRealEarthInECEF(
+      FVector Start,
+      FVector End);
+
+  UFUNCTION(
+      BlueprintCallable,
+      Category = "Coordinates",
+      meta = (BlueprintAutocast))
+  static FHitResult LineTraceRealEarthInUnreal(
+      FVector Start,
+      FVector End);
+
   UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
