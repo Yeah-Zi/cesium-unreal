@@ -92,7 +92,8 @@ void UMirrorInputRegisterComponent::RegisterInput(
         key.GetFName().ToString() + "_" + FGuid::NewGuid().ToString());
 
     UPlayerInput::AddEngineDefinedActionMapping(
-        FInputActionKeyMapping(key.GetFName(), key));
+        FInputActionKeyMapping(keyUniqueName, key));
+
     allActionBinding.Add(&InputComponent->BindAction(
         keyUniqueName,
         IE_Released,

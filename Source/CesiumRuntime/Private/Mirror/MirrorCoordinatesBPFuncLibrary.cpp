@@ -210,17 +210,17 @@ FTransform UMirrorCoordinatesBPFuncLibrary::GetUnrealToECEFTransform() {
   return FTransform(ACesiumGeoreference::GetDefaultGeoreference(GWorld)->ComputeUnrealToEarthCenteredEarthFixedTransformation());
 }
 
-FHitResult UMirrorCoordinatesBPFuncLibrary::LineTraceVirtualEarthInECEF(
+bool UMirrorCoordinatesBPFuncLibrary::LineTraceVirtualEarthInECEF(
     AVirtualEarthActor* VirtualEarth,
     FVector Start,
-    FVector End) {
-  FHitResult result;
+    FVector End,
+    FHitResult& result) {
   FCollisionQueryParams Params;
   TArray<AActor*> Actors;
   UGameplayStatics::GetAllActorsOfClass(GWorld, AActor::StaticClass(), Actors);
   Actors.Remove(VirtualEarth);
   Params.AddIgnoredActors(Actors);
-  GWorld->LineTraceSingleByChannel(
+  bool bSuccessful = GWorld->LineTraceSingleByChannel(
       result,
       Start * 100,
       End * 100,
@@ -231,57 +231,58 @@ FHitResult UMirrorCoordinatesBPFuncLibrary::LineTraceVirtualEarthInECEF(
   result.ImpactPoint = result.ImpactPoint / 100.0;
   result.TraceStart = Start;
   result.TraceEnd = End;
-  return result;
+  return bSuccessful;
 }
 
-FHitResult UMirrorCoordinatesBPFuncLibrary::LineTraceVirtualEarthInUnreal(
+bool UMirrorCoordinatesBPFuncLibrary::LineTraceVirtualEarthInUnreal(
     AVirtualEarthActor* VirtualEarth,
     FVector Start,
-    FVector End) {
+    FVector End,
+    FHitResult& result) {
   FTransform ECEFTransform = VirtualEarth->GetActorTransform();
   FTransform UnrealTransform = ECEFTransform * GetECEFToUnrealTransform();
   VirtualEarth->SetActorTransform(UnrealTransform);
 
-  FHitResult result;
   FCollisionQueryParams Params;
   TArray<AActor*> Actors;
   UGameplayStatics::GetAllActorsOfClass(GWorld, AActor::StaticClass(), Actors);
   Actors.Remove(VirtualEarth);
   Params.AddIgnoredActors(Actors);
-  GWorld->LineTraceSingleByChannel(
+  bool bSuccessful = GWorld->LineTraceSingleByChannel(
       result,
       Start,
       End,
       ECollisionChannel::ECC_GameTraceChannel3,
       Params);
-  return result;
+  return bSuccessful;
 }
 
-FHitResult UMirrorCoordinatesBPFuncLibrary::LineTraceRealEarthInECEF(
+bool UMirrorCoordinatesBPFuncLibrary::LineTraceRealEarthInECEF(
     FVector Start,
-    FVector End) {
-  FHitResult result = LineTraceRealEarthInUnreal(
+    FVector End,
+    FHitResult& result) {
+  bool bSuccessful = LineTraceRealEarthInUnreal(
       ECEFToUnrealLocation(Start),
-      ECEFToUnrealLocation(End));
+      ECEFToUnrealLocation(End),
+      result);
 
   result.ImpactPoint = UnrealToECEFLocation(result.ImpactPoint);
   result.ImpactNormal =
       GetUnrealToECEFTransform().TransformVector(result.ImpactNormal);
   result.Location = UnrealToECEFLocation(result.Location);
 
-  return result;
+  return bSuccessful;
 }
 
-FHitResult UMirrorCoordinatesBPFuncLibrary::LineTraceRealEarthInUnreal(
+bool UMirrorCoordinatesBPFuncLibrary::LineTraceRealEarthInUnreal(
     FVector Start,
-    FVector End) {
-  FHitResult result;
-  GWorld->LineTraceSingleByChannel(
-      result,
+    FVector End,
+    FHitResult& HitResult) {
+  return GWorld->LineTraceSingleByChannel(
+      HitResult,
       Start,
       End,
       ECollisionChannel::ECC_Visibility);
-  return result;
 }
 
 bool UMirrorCoordinatesBPFuncLibrary::ScreenToUnreal(
@@ -349,6 +350,9 @@ UMirrorCoordinatesBPFuncLibrary::GetViewUnrealTransform(const APawn* Pawn) {
 
 FTransform
 UMirrorCoordinatesBPFuncLibrary::GetViewECEFTransform(const APawn* Pawn) {
-  return GetViewUnrealTransform(Pawn) * GetUnrealToECEFTransform();
+  FTransform TransformNoScale =
+      GetViewUnrealTransform(Pawn) * GetUnrealToECEFTransform();
+  TransformNoScale.SetScale3D(FVector(1));
+  return TransformNoScale;
 }
 

@@ -42,9 +42,7 @@ void UMirrorManipulatorInputHandler::LeftMouseButtonReleased(
 
 void UMirrorManipulatorInputHandler::MouseMoveAxis(float value) {
   FVector2D MouseScreenPosition = GetControllerMousePosition();
-  if (value > 0) {
     OnMouseMove(MouseScreenPosition);
-  }
 }
 
 void UMirrorManipulatorInputHandler::OnMouseMove(
@@ -60,7 +58,9 @@ void UMirrorDragInputHandler::BeginPlay() {
 
 void UMirrorDragInputHandler::BeginDestroy() {
   Super::BeginDestroy();
-  GetWorld()->DestroyActor(VirtualEarthActor);
+  if (VirtualEarthActor && VirtualEarthActor->IsValidLowLevel()) {
+    GetWorld()->DestroyActor(VirtualEarthActor);
+  }
 }
 
 void UMirrorDragInputHandler::TickComponent(
@@ -73,6 +73,7 @@ void UMirrorDragInputHandler::TickComponent(
 
 void UMirrorDragInputHandler::LeftMouseButtonPressed(
     FVector2D MouseScreenPosition) {
+  DraggingStartScreenPosition = MouseScreenPosition;
   IsLeftMouseButtonPressed = true;
   APawn* Owner = Cast<APawn>(GetOwner());
   APlayerController* Controller =
@@ -81,10 +82,15 @@ void UMirrorDragInputHandler::LeftMouseButtonPressed(
   FVector UnrealLocation, UnrealDirection;
   Controller->DeprojectMousePositionToWorld(UnrealLocation, UnrealDirection);
 
-  FHitResult HitResultInUnreal =
-      UMirrorCoordinatesBPFuncLibrary::LineTraceRealEarthInUnreal(
+  FHitResult HitResultInUnreal;
+
+  if (UMirrorCoordinatesBPFuncLibrary::LineTraceRealEarthInUnreal(
           UnrealLocation,
-          UnrealLocation + 99999999999 * UnrealDirection);
+          UnrealLocation + 99999999999 * UnrealDirection,
+          HitResultInUnreal)) {
+    IsDraggingAny = true;
+  }
+
 
   FVector HitResultLocationInECEF =
       UMirrorCoordinatesBPFuncLibrary::UnrealToECEFLocation(
@@ -101,6 +107,7 @@ void UMirrorDragInputHandler::LeftMouseButtonPressed(
 void UMirrorDragInputHandler::LeftMouseButtonReleased(
     FVector2D MouseScreenPosition) {
   IsLeftMouseButtonPressed = false;
+  IsDraggingAny = false;
 }
 
 void UMirrorDragInputHandler::OnMouseMove(
@@ -109,6 +116,22 @@ void UMirrorDragInputHandler::OnMouseMove(
       !MirrorMoveManagerComponent || !MirrorMoveManagerComponent->IsValidLowLevelFast()) {
     return;
   }
+
+  if (FVector2D::Distance(DraggingStartScreenPosition, MouseScreenPosition) <
+      5) {
+    return;
+  }
+
+  if (!IsDraggingAny) {
+    return;
+  }
+
+  if (DraggingStartVirtualEarthRadius > (6378137.0 + 100000) ||
+      DraggingStartVirtualEarthRadius < (6378137.0 - 100000)) {
+    return;
+  }
+
+  DraggingStartScreenPosition = MouseScreenPosition;
   SinceLastDrag = 0;
 
   APawn* Owner = Cast<APawn>(GetOwner());
@@ -126,17 +149,22 @@ void UMirrorDragInputHandler::OnMouseMove(
       UMirrorCoordinatesBPFuncLibrary::GetUnrealToECEFTransform()
           .TransformVector(UnrealDirection);
 
-  FHitResult HitResultInECEF =
-      UMirrorCoordinatesBPFuncLibrary::LineTraceVirtualEarthInECEF(
+  FHitResult HitResultInECEF;
+  if (!UMirrorCoordinatesBPFuncLibrary::LineTraceVirtualEarthInECEF(
           VirtualEarthActor,
           ECEFLocation,
-          ECEFLocation + 999999999 * ECEFDirection);
+          ECEFLocation + 999999999 * ECEFDirection,
+          HitResultInECEF)) {
+    return;
+  }
+
+
 
   FTransform CameraInECEFTransform =
       UMirrorCoordinatesBPFuncLibrary::GetViewECEFTransform(Owner);
 
   DraggingNowEarthPositionInCameraCoordinate =
-      CameraInECEFTransform.InverseTransformPosition(ECEFLocation);
+      CameraInECEFTransform.InverseTransformPosition(HitResultInECEF.Location);
 
   TArray<FTransform> MoveTransformInECEF =
       UMirrorEarthManipulatorBPLibrary::GetManipulatorMoveECEFTransform(

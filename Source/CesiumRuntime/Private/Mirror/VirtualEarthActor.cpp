@@ -4,6 +4,9 @@
 #include "Mirror/VirtualEarthActor.h"
 #include "Components/StaticMeshComponent.h"
 #include "CesiumWgs84Ellipsoid.h"
+#include "Engine/StaticMesh.h"
+#include "PhysicsEngine/BodySetup.h"
+
 AVirtualEarthActor::AVirtualEarthActor() {
   //GetStaticMeshComponent()->SetCollisionResponseToChannel(ECollisionChannel::)
   GetStaticMeshComponent()->SetCollisionProfileName(FName("VirtualEarth"));
@@ -14,6 +17,10 @@ AVirtualEarthActor::AVirtualEarthActor() {
   GetStaticMeshComponent()->SetCollisionResponseToChannel(
       ECollisionChannel::ECC_GameTraceChannel3,
       ECollisionResponse::ECR_Block);
+  GetStaticMeshComponent()
+      ->GetStaticMesh()
+      ->GetBodySetup()
+      ->bDoubleSidedGeometry = true;
   GetStaticMeshComponent()->SetVisibility(false);
   SetVirtualEarthRadii(UCesiumWgs84Ellipsoid::GetRadii());
 }

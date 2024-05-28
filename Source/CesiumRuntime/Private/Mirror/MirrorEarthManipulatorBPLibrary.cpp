@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Mirror/MirrorEarthManipulatorBPLibrary.h"
 
 TArray<FTransform>
@@ -11,7 +10,8 @@ UMirrorEarthManipulatorBPLibrary::GetManipulatorMoveECEFTransform(
     const int& Num) {
   TArray<FTransform> Result;
 
-  const FTransform EarthTransformInCameraCoordinate = CameraInECEFTransform.Inverse();
+  const FTransform EarthTransformInCameraCoordinate =
+      CameraInECEFTransform.Inverse();
 
   FVector EarthOriginInCameraCoordinate =
       EarthTransformInCameraCoordinate.GetLocation();
@@ -19,21 +19,22 @@ UMirrorEarthManipulatorBPLibrary::GetManipulatorMoveECEFTransform(
   FVector CameraLocationInCameraCoordinate = FVector(0, 0, 0);
 
   FVector DirectionInCameraCoordinate =
-      EarthPositionInCameraCoordinate - EarthOriginInCameraCoordinate;
+      (EarthPositionInCameraCoordinate - EarthOriginInCameraCoordinate)
+          .GetUnsafeNormal();
 
   FVector AfterMoveDirectionInCameraCoordinate =
-      AfterMoveEarthPositionInCameraCoordinate;
+      (AfterMoveEarthPositionInCameraCoordinate - EarthOriginInCameraCoordinate)
+          .GetUnsafeNormal();
 
   FQuat EarthPositionMoveToInCameraCoordinateQuat = FQuat::FindBetween(
       DirectionInCameraCoordinate,
       AfterMoveDirectionInCameraCoordinate);
 
   for (size_t i = 1; i <= Num; i++) {
-    const FQuat InterpolateQuat = FMath::QInterpTo(
+    const FQuat InterpolateQuat = FQuat::Slerp(
         FQuat::Identity,
         EarthPositionMoveToInCameraCoordinateQuat,
-        i * 1.f / Num,
-        1.0);
+        FMath::Clamp<double>(i * 1.f / double(Num), 0.f, 1.f));
 
     FTransform EarthInterpolateTransformInCameraCoordinate =
         EarthTransformInCameraCoordinate;

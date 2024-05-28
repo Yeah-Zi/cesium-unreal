@@ -49,11 +49,15 @@ void UMirrorMoveManagerComponent::SetActorTransforms(
       continue;
     }
   }
-  ECEFMoveInfos.Transforms = Transforms;
-  ECEFMoveInfos.MoveTime = InMoveTime;
   if (!ECEFMoveInfos.isEnd && !ECEFMoveInfos.isStop) {
     ECEFMoveInfos.StopCallback();
   }
+  ECEFMoveInfos = FMoveInfos();
+  ECEFMoveInfos.Transforms = Transforms;
+  ECEFMoveInfos.MoveTime = InMoveTime;
+  ECEFMoveInfos.startCallback = StartCallBack;
+  ECEFMoveInfos.stopCallback = StopCallBack;
+  ECEFMoveInfos.endCallback = EndCallBack;
   UsedTime = 0;
 }
 
@@ -90,6 +94,15 @@ void UMirrorMoveManagerComponent::Move(const double& Time) {
     return;
   }
 
+  if (ECEFMoveInfos.Transforms.IsEmpty()) {
+    ECEFMoveInfos.EndCallback();
+    return;
+  }
+  GEngine->AddOnScreenDebugMessage(
+      -1,
+      1,
+      FColor::Red,
+      FString::SanitizeFloat(Time));
   int MoveIndex = FMath::Clamp(
       FMath::Clamp((Time / ECEFMoveInfos.MoveTime), 0.0, 1.0) *
           ECEFMoveInfos.Transforms.Num(),

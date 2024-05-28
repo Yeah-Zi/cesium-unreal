@@ -47,14 +47,14 @@ public:
       FActorComponentTickFunction* ThisTickFunction) override;
 
   bool IsLeftMouseButtonPressed = false;
-
-  double DraggingInterval = 0.2;
+  bool IsDraggingAny = false;
+  double DraggingInterval = 0.1;
   double SinceLastDrag = 0;
 
   double DraggingStartVirtualEarthRadius;
   FVector DraggingStartEarthPositionInCameraCoordinate;
   FVector DraggingNowEarthPositionInCameraCoordinate;
-
+  FVector2D DraggingStartScreenPosition;
   AVirtualEarthActor* VirtualEarthActor;
   virtual void LeftMouseButtonPressed(FVector2D MouseScreenPosition);
   virtual void LeftMouseButtonReleased(FVector2D MouseScreenPosition);

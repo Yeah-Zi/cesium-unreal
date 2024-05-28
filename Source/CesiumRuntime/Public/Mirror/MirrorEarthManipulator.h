@@ -2,28 +2,40 @@
 
 #pragma once
 
+#include "Camera/CameraComponent.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "MirrorManipulatorInputHandler.h"
+#include "MirrorMoveManagerComponent.h"
 #include "MirrorEarthManipulator.generated.h"
 
 UCLASS()
-class CESIUMRUNTIME_API AMirrorEarthManipulator : public APawn
-{
-	GENERATED_BODY()
+class CESIUMRUNTIME_API AMirrorEarthManipulator : public APawn {
+  GENERATED_BODY()
 
 public:
-	// Sets default values for this pawn's properties
-	AMirrorEarthManipulator();
+  // Sets default values for this pawn's properties
+  AMirrorEarthManipulator();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+  // Called when the game starts or when spawned
+  virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+public:
+  UPROPERTY(VisibleAnywhere)
+  UMirrorMoveManagerComponent* MoveManager;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+  UPROPERTY(VisibleAnywhere)
+  UMirrorDragInputHandler* DragInputHandler;
 
+  UPROPERTY(VisibleAnywhere)
+  UCameraComponent* Camera;
+
+
+  // Called every frame
+  virtual void Tick(float DeltaTime) override;
+
+  // Called to bind functionality to input
+  virtual void SetupPlayerInputComponent(
+      class UInputComponent* PlayerInputComponent) override;
 };

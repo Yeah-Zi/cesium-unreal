@@ -207,35 +207,39 @@ public:
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
-  static FHitResult LineTraceVirtualEarthInECEF(
+  static bool LineTraceVirtualEarthInECEF(
       AVirtualEarthActor* VirtualEarth,
       FVector Start,
-      FVector End);
+      FVector End,
+      FHitResult& result);
 
   UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
-  static FHitResult LineTraceVirtualEarthInUnreal(
+  static bool LineTraceVirtualEarthInUnreal(
       AVirtualEarthActor* VirtualEarth,
       FVector Start,
-      FVector End);
+      FVector End,
+      FHitResult& result);
 
     UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
-  static FHitResult LineTraceRealEarthInECEF(
+  static bool LineTraceRealEarthInECEF(
       FVector Start,
-      FVector End);
+      FVector End,
+    FHitResult& result);
 
   UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
-  static FHitResult LineTraceRealEarthInUnreal(
+  static bool LineTraceRealEarthInUnreal(
       FVector Start,
-      FVector End);
+      FVector End,
+      FHitResult& HitResult);
 
   UFUNCTION(
       BlueprintCallable,
