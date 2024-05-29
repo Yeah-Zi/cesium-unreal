@@ -153,7 +153,7 @@ void UMirrorDragInputHandler::OnMouseMove(
   if (!UMirrorCoordinatesBPFuncLibrary::LineTraceVirtualEarthInECEF(
           VirtualEarthActor,
           ECEFLocation,
-          ECEFLocation + 999999999 * ECEFDirection,
+          ECEFLocation + 9999999999999 * ECEFDirection,
           HitResultInECEF)) {
     return;
   }
@@ -181,4 +181,84 @@ void UMirrorDragInputHandler::OnMouseMove(
   /* */
   DraggingStartEarthPositionInCameraCoordinate =
       DraggingNowEarthPositionInCameraCoordinate;
+}
+
+UMirrorScaleInputHandler::UMirrorScaleInputHandler() {}
+
+void UMirrorScaleInputHandler::BeginPlay() { Super::BeginPlay(); }
+
+void UMirrorScaleInputHandler::BeginDestroy() { Super::BeginDestroy(); }
+
+void UMirrorScaleInputHandler::TickComponent(
+    float DeltaTime,
+    ELevelTick TickType,
+    FActorComponentTickFunction* ThisTickFunction) {
+   Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+  SinceLastScale += DeltaTime;
+}
+
+void UMirrorScaleInputHandler::ScrollWheelAxis(float value) {
+  if (FMath::IsNearlyEqual(value, 0) || SinceLastScale < ScalingInterval) {
+    return;
+  }
+  SinceLastScale = 0;
+  GEngine->AddOnScreenDebugMessage(
+      -1,
+      2,
+      FColor::Cyan,
+      FString::SanitizeFloat(value));
+  double Scale;
+  if (value > 0) {
+    Scale = 1.0 /2.0;
+  } else {
+    Scale = 2.0 / 1.0;
+    ;
+  }
+
+  FVector ScalePositionInCameraCoordinate;
+
+  APawn* Owner = Cast<APawn>(GetOwner());
+  APlayerController* Controller =
+      Cast<APlayerController>(Owner->GetController());
+
+  FVector2D CursorPosition;
+  if (!Controller->GetMousePosition(CursorPosition.X, CursorPosition.Y)) {
+    return;
+  }
+
+  FVector CursorECEFLocation, CursorECEFDirection;
+  if (!UMirrorCoordinatesBPFuncLibrary::ScreenToECEF(
+          Controller,
+          CursorPosition,
+          CursorECEFLocation,
+          CursorECEFDirection)) {
+    return;
+  }
+
+  FHitResult HitResultInECEF;
+
+  if (!UMirrorCoordinatesBPFuncLibrary::LineTraceRealEarthInECEF(
+          CursorECEFLocation,
+          CursorECEFLocation + 9999999999999 * CursorECEFDirection,
+          HitResultInECEF)) {
+    return;
+  }
+
+  FTransform CameraInECEFTransform =
+      UMirrorCoordinatesBPFuncLibrary::GetViewECEFTransform(Owner);
+
+
+  TArray<FTransform> ScaleTransformInECEF =
+      UMirrorEarthManipulatorBPLibrary::GetManipulatorScaleECEFTransform(
+      CameraInECEFTransform,
+      CameraInECEFTransform.InverseTransformPosition(HitResultInECEF.Location),
+      CameraInECEFTransform.InverseTransformPosition(CursorECEFLocation),
+      CameraInECEFTransform.InverseTransformVector(CursorECEFDirection),
+      Scale,
+      240);
+
+    MirrorMoveManagerComponent->SetActorTransforms(
+      EMirrorCoordinate::ECEF,
+      ScaleTransformInECEF,
+      ScalingInterval);
 }

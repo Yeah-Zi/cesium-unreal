@@ -19,4 +19,12 @@ public:
             const FVector& EarthPositionInCameraCoordinate,
             const FVector& AfterMoveEarthPositionInCameraCoordinate,
             const int& Num);
+
+        static TArray<FTransform> GetManipulatorScaleECEFTransform(
+            const FTransform& CameraInECEFTransform,
+            const FVector& FocusPositionInCameraCoordinate,
+            const FVector& CursorPositionInCameraCoordinate,
+            const FVector& CursorDirectionInCameraCoordinate,
+            const double& Scale,
+            const int& Num);
 };

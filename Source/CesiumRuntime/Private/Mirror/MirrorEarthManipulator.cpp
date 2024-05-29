@@ -13,9 +13,17 @@ AMirrorEarthManipulator::AMirrorEarthManipulator() {
 
   DragInputHandler =
       CreateDefaultSubobject<UMirrorDragInputHandler>(TEXT("DragInputHandler"));
+
+  ScaleInputHandler = 
+    CreateDefaultSubobject<UMirrorScaleInputHandler>(TEXT("ScaleInputHandler"));
+
   Camera =
       CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
   SetRootComponent(Camera);
+
+  bUseControllerRotationPitch = false;
+  bUseControllerRotationYaw = false;
+  bUseControllerRotationRoll = false;
 }
 
 // Called when the game starts or when spawned

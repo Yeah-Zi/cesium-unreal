@@ -31,7 +31,8 @@ public:
   UPROPERTY(VisibleAnywhere)
   UCameraComponent* Camera;
 
-
+  UPROPERTY(VisibleAnywhere)
+  UMirrorScaleInputHandler* ScaleInputHandler;
   // Called every frame
   virtual void Tick(float DeltaTime) override;
 

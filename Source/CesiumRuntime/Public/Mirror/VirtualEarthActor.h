@@ -27,4 +27,10 @@ public:
       Category = "Coordinates",
       meta = (BlueprintAutocast))
   static AVirtualEarthActor* GetWGS84VirtualEarth();
+
+  UFUNCTION(
+      BlueprintCallable,
+      Category = "Coordinates",
+      meta = (BlueprintAutocast))
+  static AVirtualEarthActor* GetDynamicVirtualEarth(const FVector& Radius);
 };

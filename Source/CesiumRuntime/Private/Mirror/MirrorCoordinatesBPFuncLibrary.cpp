@@ -129,7 +129,7 @@ FVector UMirrorCoordinatesBPFuncLibrary::ECEFToENULocation(
 
 FVector
 UMirrorCoordinatesBPFuncLibrary::ECEFToUnrealLocation(const FVector& Location) {
-  return GetUnrealToECEFTransform().TransformPosition(Location);
+  return GetECEFToUnrealTransform().TransformPosition(Location);
 }
 
 FVector UMirrorCoordinatesBPFuncLibrary::UnrealToENULocation(
@@ -261,6 +261,9 @@ bool UMirrorCoordinatesBPFuncLibrary::LineTraceRealEarthInECEF(
     FVector Start,
     FVector End,
     FHitResult& result) {
+
+  FVector UnrealStart = ECEFToUnrealLocation(Start);
+  FVector UnrealEnd = ECEFToUnrealLocation(End);
   bool bSuccessful = LineTraceRealEarthInUnreal(
       ECEFToUnrealLocation(Start),
       ECEFToUnrealLocation(End),

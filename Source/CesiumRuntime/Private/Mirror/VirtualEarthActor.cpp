@@ -37,3 +37,13 @@ AVirtualEarthActor* AVirtualEarthActor::GetWGS84VirtualEarth() {
   WGS84->SetVirtualEarthRadii(UCesiumWgs84Ellipsoid::GetRadii());
   return WGS84;
 }
+
+AVirtualEarthActor*
+AVirtualEarthActor::GetDynamicVirtualEarth(const FVector& Radius) {
+  static AVirtualEarthActor* VirtualEarth = nullptr;
+  if (!VirtualEarth || !VirtualEarth->IsValidLowLevelFast()) {
+    VirtualEarth = GWorld->SpawnActor<AVirtualEarthActor>();
+  }
+  VirtualEarth->SetVirtualEarthRadii(Radius);
+  return VirtualEarth;
+}
