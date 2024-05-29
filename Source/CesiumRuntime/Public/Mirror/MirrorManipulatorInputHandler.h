@@ -81,6 +81,6 @@ public:
 
   virtual void ScrollWheelAxis(float value);
 
-    double ScalingInterval = 0.05;
+    double ScalingInterval = 0.15;
   double SinceLastScale = 0;
 };

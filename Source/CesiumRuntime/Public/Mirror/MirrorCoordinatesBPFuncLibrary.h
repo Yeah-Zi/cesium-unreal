@@ -290,4 +290,28 @@ public:
       Category = "Coordinates",
       meta = (BlueprintAutocast))
   static FTransform GetViewECEFTransform(const APawn* Pawn);
+
+    UFUNCTION(
+      BlueprintCallable,
+      Category = "Coordinates",
+      meta = (BlueprintAutocast))
+  static FVector ECEFToLonLatH(const FVector& ECEFPosition);
+
+    UFUNCTION(
+      BlueprintCallable,
+      Category = "Coordinates",
+      meta = (BlueprintAutocast))
+  static FVector UnrealToLonLatH(const FVector& UnrealPosition);
+
+    UFUNCTION(
+        BlueprintCallable,
+        Category = "Coordinates",
+        meta = (BlueprintAutocast))
+  static FVector LonLatHToECEF(const FVector& LonLatH);
+
+      UFUNCTION(
+      BlueprintCallable,
+      Category = "Coordinates",
+      meta = (BlueprintAutocast))
+  static FVector LonLatHToUnreal(const FVector& LonLatH);
 };

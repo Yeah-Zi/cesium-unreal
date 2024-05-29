@@ -41,7 +41,7 @@ AVirtualEarthActor* AVirtualEarthActor::GetWGS84VirtualEarth() {
 AVirtualEarthActor*
 AVirtualEarthActor::GetDynamicVirtualEarth(const FVector& Radius) {
   static AVirtualEarthActor* VirtualEarth = nullptr;
-  if (!VirtualEarth || !VirtualEarth->IsValidLowLevelFast()) {
+  if (!VirtualEarth || !VirtualEarth->IsValidLowLevel()) {
     VirtualEarth = GWorld->SpawnActor<AVirtualEarthActor>();
   }
   VirtualEarth->SetVirtualEarthRadii(Radius);

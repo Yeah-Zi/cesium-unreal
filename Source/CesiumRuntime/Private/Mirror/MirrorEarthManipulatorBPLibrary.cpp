@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Mirror/MirrorEarthManipulatorBPLibrary.h"
-#include "Mirror/VirtualEarthActor.h"
 #include "Mirror/MirrorCoordinatesBPFuncLibrary.h"
+#include "Mirror/VirtualEarthActor.h"
 TArray<FTransform>
 UMirrorEarthManipulatorBPLibrary::GetManipulatorMoveECEFTransform(
     const FTransform& CameraInECEFTransform,
@@ -74,19 +74,22 @@ UMirrorEarthManipulatorBPLibrary::GetManipulatorScaleECEFTransform(
   FVector ScaleAxis =
       EarthTransformInCameraCoordinate.GetLocation().GetUnsafeNormal();
 
-
-    FVector DeltaLocation =
+  FVector DeltaLocation =
       (Scale - 1) * ScaleAxis * (CameraPositionRadius - FocusPositionRadius);
 
   TArray<FTransform> Result;
   for (size_t i = 1; i <= Num; i++) {
     double ScaleValue = double(i) / double(Num) * (Scale - 1);
-    FVector InterpolateDeltaLocation = FMath::VInterpTo(
-        FVector(0, 0, 0),
-        DeltaLocation,
-        sin(i * (DOUBLE_PI / 2 / (Num * 1.0))) /
-            sin(DOUBLE_PI / 2) * 1.0,
-        1.0);
+
+    FVector InterpolateDeltaLocation =
+        ScaleValue * ScaleAxis * (CameraPositionRadius - FocusPositionRadius);
+
+    // FVector InterpolateDeltaLocation = FMath::VInterpTo(
+    //     FVector(0, 0, 0),
+    //     DeltaLocation,
+    //     sin(i * (DOUBLE_PI / 2 / (Num * 1.0))) /
+    //         sin(DOUBLE_PI / 2) * 1.0,
+    //     1.0);
 
     FTransform AfterScaleEarthTransformInCameraCoordinate =
         EarthTransformInCameraCoordinate;
@@ -113,9 +116,10 @@ UMirrorEarthManipulatorBPLibrary::GetManipulatorScaleECEFTransform(
             HitResultInECEF)) {
       return Result;
     }
+
     FVector AfterScaleFocusPositionInCameraCoordinate =
-        CameraInECEFTransform.InverseTransformPosition(
-            HitResultInECEF.Location);
+        AfterScaleEarthTransformInCameraCoordinate.Inverse()
+            .InverseTransformPosition(HitResultInECEF.Location);
 
     FVector AfterScaleFocusPositionToEarthCenterDirectionInCameraCoordiante =
         (AfterScaleFocusPositionInCameraCoordinate -
@@ -123,16 +127,12 @@ UMirrorEarthManipulatorBPLibrary::GetManipulatorScaleECEFTransform(
             .GetUnsafeNormal();
 
     FQuat AfterScaleFocusPositionQuat = FQuat::FindBetween(
-        (FocusPositionInCameraCoordinate + InterpolateDeltaLocation -
-         AfterScaleEarthTransformInCameraCoordinate.GetLocation())
-            .GetUnsafeNormal(),
-        AfterScaleFocusPositionToEarthCenterDirectionInCameraCoordiante
-        );
+        BeforeScaleFocusPositionToEarthCenterDirectionInCameraCoordiante,
+        AfterScaleFocusPositionToEarthCenterDirectionInCameraCoordiante);
 
     AfterScaleEarthTransformInCameraCoordinate.SetRotation(
-        AfterScaleFocusPositionQuat * AfterScaleEarthTransformInCameraCoordinate
-            .GetRotation()
-        );
+        AfterScaleFocusPositionQuat *
+        AfterScaleEarthTransformInCameraCoordinate.GetRotation());
 
     FTransform AfterScaleCameraTransformInECEFCoordinate =
         AfterScaleEarthTransformInCameraCoordinate.Inverse();
@@ -142,4 +142,3 @@ UMirrorEarthManipulatorBPLibrary::GetManipulatorScaleECEFTransform(
 
   return Result;
 }
-

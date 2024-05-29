@@ -359,3 +359,26 @@ UMirrorCoordinatesBPFuncLibrary::GetViewECEFTransform(const APawn* Pawn) {
   return TransformNoScale;
 }
 
+FVector
+UMirrorCoordinatesBPFuncLibrary::ECEFToLonLatH(const FVector& ECEFPosition) {
+  return UCesiumWgs84Ellipsoid::EarthCenteredEarthFixedToLongitudeLatitudeHeight(
+      ECEFPosition);
+}
+
+FVector UMirrorCoordinatesBPFuncLibrary::UnrealToLonLatH(
+    const FVector& UnrealPosition) {
+  FVector ECEFPosition = UnrealToECEFLocation(UnrealPosition);
+  return ECEFToLonLatH(ECEFPosition);
+}
+
+FVector UMirrorCoordinatesBPFuncLibrary::LonLatHToECEF(const FVector& LonLatH) {
+  return UCesiumWgs84Ellipsoid::
+      LongitudeLatitudeHeightToEarthCenteredEarthFixed(LonLatH);
+}
+
+FVector
+UMirrorCoordinatesBPFuncLibrary::LonLatHToUnreal(const FVector& LonLatH) {
+  FVector ECEFPosition = LonLatHToECEF(LonLatH);
+  return ECEFToUnrealLocation(ECEFPosition);
+}
+
