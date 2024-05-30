@@ -142,3 +142,201 @@ UMirrorEarthManipulatorBPLibrary::GetManipulatorScaleECEFTransform(
 
   return Result;
 }
+
+double IncludedAngle(
+    const FVector& StartPointEarthLocation,
+    const FVector& TargetPointEarthLocation) {
+  double LStart = sqrt(
+      pow(StartPointEarthLocation.X, 2) + pow(StartPointEarthLocation.Y, 2) +
+      pow(StartPointEarthLocation.Z, 2));
+  double LTarget = sqrt(
+      pow(TargetPointEarthLocation.X, 2) + pow(TargetPointEarthLocation.Y, 2) +
+      pow(TargetPointEarthLocation.Z, 2));
+  double CosTheta =
+      (StartPointEarthLocation | TargetPointEarthLocation) / (LStart * LTarget);
+  if (abs(CosTheta) > 1) {
+    CosTheta = CosTheta / abs(CosTheta);
+  }
+  double Theta = acos(CosTheta);
+
+  return Theta;
+}
+
+double AngleD(const FVector& a, const FVector& b) {
+  return FQuat::FindBetween(a.GetSafeNormal(), b.GetSafeNormal()).GetAngle() *
+         180.0 / DOUBLE_PI;
+}
+
+TArray<FTransform>
+UMirrorEarthManipulatorBPLibrary::GetManipulatorRotateECEFTransform(
+    const FTransform& CameraInECEFTransform,
+    const FVector FocusPointInECEFCoordinate,
+    double yawDegree,
+    double PitchDegree,
+    const int& Num) {
+
+  FVector CameraToFocusDirection =
+      (CameraInECEFTransform.GetLocation() - FocusPointInECEFCoordinate)
+          .GetUnsafeNormal();
+
+  FPlane CameraPlane(CameraInECEFTransform.GetRotation().GetAxisY(), 0);
+  FVector ProjectCameraToFocusDirection = FPlane::PointPlaneProject(
+      CameraInECEFTransform.GetRotation().GetAxisX(),
+      CameraPlane);
+
+  FVector ProjectFocusPointInECEFCoordinate = FPlane::PointPlaneProject(
+      CameraInECEFTransform.GetLocation().GetUnsafeNormal(),
+      CameraPlane);
+
+  double maxPitchDegree =
+      AngleD(ProjectCameraToFocusDirection, ProjectFocusPointInECEFCoordinate) -
+      2;
+  maxPitchDegree = maxPitchDegree < 0 ? 0 : maxPitchDegree;
+  double minPitchDegree = maxPitchDegree - 90 + 5;
+
+  double temp = minPitchDegree;
+  minPitchDegree = -maxPitchDegree;
+  maxPitchDegree = -temp;
+  double angle = FQuat::FindBetween(
+                     ProjectFocusPointInECEFCoordinate,
+                     CameraInECEFTransform.GetLocation().GetUnsafeNormal())
+                     .GetAngle() *
+                 180.0 / PI;
+
+   FVector::CrossProduct(
+      ProjectFocusPointInECEFCoordinate,
+      CameraInECEFTransform.GetLocation().GetUnsafeNormal());
+
+
+  GEngine->AddOnScreenDebugMessage(
+    -1,
+    4,
+    FColor::Red,
+    FString("angle:") + FString::SanitizeFloat(angle));
+  GEngine->AddOnScreenDebugMessage(
+      -1,
+      4,
+      FColor::Red,
+      FString("maxPitchDegree:") + FString::SanitizeFloat(maxPitchDegree));
+  GEngine->AddOnScreenDebugMessage(
+      -1,
+      4,
+      FColor::Red,
+      FString("minPitchDegree:") + FString::SanitizeFloat(minPitchDegree));   
+
+
+  PitchDegree = FMath::Clamp(PitchDegree, minPitchDegree, maxPitchDegree);
+
+  TArray<FTransform> Result;
+	for (size_t i = 1; i <= Num; i++) {
+    double interpolatePitchDegree = double(i) / double(Num) * PitchDegree;
+    double interpolateYawDegree = double(i) / double(Num) * yawDegree;
+
+    FVector pitchAxis = CameraInECEFTransform.GetRotation().GetAxisY();
+    FVector localCameraLocation =
+        CameraInECEFTransform.GetLocation() - FocusPointInECEFCoordinate;
+    FQuat pitchRotateMat; //  EMath::AroundAxisRotation(UnitAxis, RotateDegree);
+    pitchRotateMat = FQuat(UMirrorCoordinatesBPFuncLibrary::ArroundAxisRotation(
+            pitchAxis,
+            interpolatePitchDegree));
+    localCameraLocation = pitchRotateMat * localCameraLocation;
+    FQuat afterPitchCameraRotate =
+        pitchRotateMat * CameraInECEFTransform.GetRotation();
+
+    FVector yawAxis = FocusPointInECEFCoordinate.GetUnsafeNormal();
+    FQuat yawRotateMat; //  EMath::AroundAxisRotation(UnitAxis, RotateDegree);
+    yawRotateMat = FQuat(UMirrorCoordinatesBPFuncLibrary::ArroundAxisRotation(
+        yawAxis,
+        interpolateYawDegree));
+    localCameraLocation = yawRotateMat * localCameraLocation;
+    FQuat afterYawCameraRotate = yawRotateMat * afterPitchCameraRotate;
+
+    FTransform interpolateCameraTransform;
+    interpolateCameraTransform.SetTranslation(
+        localCameraLocation + FocusPointInECEFCoordinate);
+    interpolateCameraTransform.SetRotation(afterYawCameraRotate);
+    Result.Add(interpolateCameraTransform);
+  }
+
+  return Result;
+}
+
+TArray<FTransform>
+UMirrorEarthManipulatorBPLibrary::GetManipulatorRotateECEFTransform2(
+    const FTransform& CameraInECEFTransform,
+    const FVector focalPointInSphereCoordinate,
+    double yawDegree,
+    double pitchDegree,
+    const int& tickCount) {
+  TArray<FTransform> resultTransform;
+
+  FTransform CameraInECEF = CameraInECEFTransform;
+  FVector cameraLocation = CameraInECEF.GetLocation();
+  FQuat cameraRotation = FQuat(CameraInECEF.GetRotation());
+
+  FVector cameraToFocalNormal =
+      (cameraLocation - focalPointInSphereCoordinate).GetSafeNormal();
+
+  // 计算轴点与球心的球向量在球心沿Y轴方向上的投影，P0为投影点
+  FVector V1 = focalPointInSphereCoordinate;
+  FVector V2 = cameraRotation.GetAxisY();
+  double LV1 = sqrt(pow(V1.X, 2) + pow(V1.Y, 2) + pow(V1.Z, 2));
+  double K = cos(IncludedAngle(V1, V2)) * LV1;
+  FVector P0 = V2 * K;
+
+  FPlane plane((FVector)cameraRotation.GetAxisY(), 0);
+  FVector targetDiretion = FVector::CrossProduct(
+      cameraRotation.GetAxisY(),
+      (focalPointInSphereCoordinate).GetSafeNormal());
+  double maxPitchDegree =
+      AngleD(cameraRotation.GetAxisX(), cameraLocation.GetUnsafeNormal()) - 2;
+  maxPitchDegree = maxPitchDegree < 0 ? 0 : maxPitchDegree; 
+  double minPitchDegree = maxPitchDegree - 90 + 5;
+
+  double temp = minPitchDegree;
+  minPitchDegree = -maxPitchDegree;
+  maxPitchDegree = -temp;
+
+
+  pitchDegree = FMath::Clamp(pitchDegree, minPitchDegree, maxPitchDegree);
+
+      GEngine->AddOnScreenDebugMessage(
+      -1,
+      4,
+      FColor::Red,
+      FString("maxPitchDegree:") + FString::SanitizeFloat(maxPitchDegree));   
+      GEngine->AddOnScreenDebugMessage(
+          -1,
+          4,
+          FColor::Red,
+          FString("minPitchDegree:") + FString::SanitizeFloat(minPitchDegree));   
+  for (size_t i = 1; i <= tickCount; i++) {
+    double interpolatePitchDegree = double(i) / double(tickCount) * pitchDegree;
+    double interpolateYawDegree = double(i) / double(tickCount) * yawDegree;
+
+    FVector pitchAxis = cameraRotation.GetAxisY();
+    FVector localCameraLocation = cameraLocation - focalPointInSphereCoordinate;
+    FQuat pitchRotateMat; //  EMath::AroundAxisRotation(UnitAxis, RotateDegree);
+    pitchRotateMat = FQuat(UMirrorCoordinatesBPFuncLibrary::ArroundAxisRotation(
+            pitchAxis,
+            interpolatePitchDegree));
+    localCameraLocation = pitchRotateMat * localCameraLocation;
+    FQuat afterPitchCameraRotate = pitchRotateMat * cameraRotation;
+
+    FVector yawAxis = focalPointInSphereCoordinate.GetSafeNormal();
+    FQuat yawRotateMat; //  EMath::AroundAxisRotation(UnitAxis, RotateDegree);
+    yawRotateMat = FQuat(UMirrorCoordinatesBPFuncLibrary::ArroundAxisRotation(
+        yawAxis,
+        interpolateYawDegree));
+    localCameraLocation = yawRotateMat * localCameraLocation;
+    FQuat afterYawCameraRotate = yawRotateMat * afterPitchCameraRotate;
+
+    FTransform interpolateCameraTransform;
+    interpolateCameraTransform.SetTranslation(
+        localCameraLocation + focalPointInSphereCoordinate);
+    interpolateCameraTransform.SetRotation(afterYawCameraRotate);
+    resultTransform.Add(interpolateCameraTransform);
+  }
+
+  return resultTransform;
+}

@@ -81,6 +81,30 @@ public:
 
   virtual void ScrollWheelAxis(float value);
 
-    double ScalingInterval = 0.15;
+    double ScalingInterval = 0.5;
   double SinceLastScale = 0;
+};
+
+UCLASS()
+class UMirrorRotateInputHandler : public UMirrorManipulatorInputHandler
+{
+  GENERATED_BODY()
+public:
+  UMirrorRotateInputHandler();
+  virtual void PressedAction(struct FKey key);
+  virtual void ReleasedAction(struct FKey key);
+
+  virtual void MouseMidButtonPressed();
+
+  virtual void MouseMidButtonReleased();
+
+  virtual void OnMouseMove(const FVector2D& MouseScreenPosition);
+
+  FVector firstFocusPointInECEFCoordinate;
+  FVector2D currentCursorScreenPosition;
+  FVector2D lastCursorScreenPosition;
+  FVector2D firstCursorScreenPosition;
+
+  bool bRotateClickDown = false;
+  bool bClickOnEarth = false;
 };

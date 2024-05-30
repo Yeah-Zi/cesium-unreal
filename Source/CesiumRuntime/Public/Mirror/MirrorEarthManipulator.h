@@ -33,6 +33,9 @@ public:
 
   UPROPERTY(VisibleAnywhere)
   UMirrorScaleInputHandler* ScaleInputHandler;
+
+  UPROPERTY(VisibleAnywhere)
+  UMirrorRotateInputHandler* RotateInputHandler;
   // Called every frame
   virtual void Tick(float DeltaTime) override;
 

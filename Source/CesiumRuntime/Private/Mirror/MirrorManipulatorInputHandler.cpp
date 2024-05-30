@@ -262,3 +262,91 @@ void UMirrorScaleInputHandler::ScrollWheelAxis(float value) {
       ScaleTransformInECEF,
       ScalingInterval);
 }
+
+UMirrorRotateInputHandler::UMirrorRotateInputHandler() {}
+
+void UMirrorRotateInputHandler::PressedAction(FKey key) {
+    if (key == EKeys::MiddleMouseButton) {
+    MouseMidButtonPressed();
+    }
+}
+
+void UMirrorRotateInputHandler::ReleasedAction(FKey key) {
+    if (key == EKeys::MiddleMouseButton) {
+    MouseMidButtonReleased();
+    }
+}
+
+void UMirrorRotateInputHandler::MouseMidButtonPressed() {
+    APawn* Owner = Cast<APawn>(GetOwner());
+    APlayerController* Controller =
+        Cast<APlayerController>(Owner->GetController());
+
+    bRotateClickDown = true;
+    firstCursorScreenPosition = GetControllerMousePosition();
+    lastCursorScreenPosition = GetControllerMousePosition();
+
+    FVector CursorUnrealLocation, CursorUnrealDirection;
+    Controller->DeprojectMousePositionToWorld(
+        CursorUnrealLocation,
+        CursorUnrealDirection);
+    FVector CursorECEFLocation =
+        UMirrorCoordinatesBPFuncLibrary::GetUnrealToECEFTransform()
+            .TransformPosition(CursorUnrealLocation);
+
+    FVector CursorECEFDirection =
+        UMirrorCoordinatesBPFuncLibrary::GetUnrealToECEFTransform()
+            .TransformVector(CursorUnrealDirection);
+
+    FHitResult HitResultInECEF;   
+
+    if (UMirrorCoordinatesBPFuncLibrary::LineTraceRealEarthInECEF(
+            CursorECEFLocation,
+            CursorECEFLocation + 999999999999999 * CursorECEFDirection,
+            HitResultInECEF)) {
+    bClickOnEarth = true;
+    firstFocusPointInECEFCoordinate = HitResultInECEF.Location;
+    } else {
+    bClickOnEarth = false;
+    }
+}
+
+void UMirrorRotateInputHandler::MouseMidButtonReleased() {
+    bRotateClickDown = false;
+}
+
+void UMirrorRotateInputHandler::OnMouseMove(
+    const FVector2D& MouseScreenPosition) {
+    lastCursorScreenPosition = currentCursorScreenPosition;
+    currentCursorScreenPosition = MouseScreenPosition;
+    APawn* Owner = Cast<APawn>(GetOwner());
+
+    if (bRotateClickDown && bClickOnEarth) {
+    float xOffset =
+        (currentCursorScreenPosition.X - lastCursorScreenPosition.X) / 6;
+    float yOffset =
+        (currentCursorScreenPosition.Y - lastCursorScreenPosition.Y) / 6;
+    
+    TArray<FTransform> RotateTransformInECEF =
+        UMirrorEarthManipulatorBPLibrary::GetManipulatorRotateECEFTransform(
+            UMirrorCoordinatesBPFuncLibrary::GetViewECEFTransform(Owner),
+            firstFocusPointInECEFCoordinate,
+            -xOffset,
+            yOffset,
+            1);
+    MirrorMoveManagerComponent->SetActorTransforms(
+        EMirrorCoordinate::ECEF,
+        RotateTransformInECEF,
+        0);
+    }
+    if (bRotateClickDown && !bClickOnEarth) {
+    }
+
+    FTransform CameraTransform =
+        UMirrorCoordinatesBPFuncLibrary::GetViewECEFTransform(Owner);
+
+    FTransform CameraInUnreal =
+        UMirrorCoordinatesBPFuncLibrary::ECEFToUnrealTransform(CameraTransform);
+
+        
+}

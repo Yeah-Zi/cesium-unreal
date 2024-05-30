@@ -27,4 +27,18 @@ public:
             const FVector& CursorDirectionInCameraCoordinate,
             const double& Scale,
             const int& Num);
+
+        static TArray<FTransform> GetManipulatorRotateECEFTransform(
+            const FTransform& CameraInECEFTransform,
+            const FVector FocusPointInECEFCoordinate,
+            double yawDegree,
+            double PitchDegree,
+            const int& Num);
+
+        static TArray<FTransform> GetManipulatorRotateECEFTransform2(
+            const FTransform& CameraInECEFTransform,
+            const FVector focalPointInSphereCoordinate,
+            double yawDegree,
+            double pitchDegree,
+            const int& tickCount);
 };

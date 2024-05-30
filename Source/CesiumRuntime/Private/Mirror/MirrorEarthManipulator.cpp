@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Mirror/MirrorEarthManipulator.h"
-
+#include "Mirror/MirrorCoordinatesBPFuncLibrary.h"
 // Sets default values
 AMirrorEarthManipulator::AMirrorEarthManipulator() {
   // Set this pawn to call Tick() every frame.  You can turn this off to improve
@@ -17,10 +17,17 @@ AMirrorEarthManipulator::AMirrorEarthManipulator() {
   ScaleInputHandler = 
     CreateDefaultSubobject<UMirrorScaleInputHandler>(TEXT("ScaleInputHandler"));
 
+  RotateInputHandler = CreateDefaultSubobject<UMirrorRotateInputHandler>(
+      TEXT("RotateInputHandler"));
+
+  RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+  SetRootComponent(RootComponent);
+
   Camera =
       CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-  SetRootComponent(Camera);
-
+  Camera->AttachToComponent(
+      RootComponent,
+      FAttachmentTransformRules::KeepRelativeTransform);
   bUseControllerRotationPitch = false;
   bUseControllerRotationYaw = false;
   bUseControllerRotationRoll = false;
