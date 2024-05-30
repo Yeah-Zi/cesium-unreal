@@ -180,52 +180,67 @@ UMirrorEarthManipulatorBPLibrary::GetManipulatorRotateECEFTransform(
           .GetUnsafeNormal();
 
   FPlane CameraPlane(CameraInECEFTransform.GetRotation().GetAxisY(), 0);
-  FVector ProjectCameraToFocusDirection = FPlane::PointPlaneProject(
-      CameraInECEFTransform.GetRotation().GetAxisX(),
-      CameraPlane);
 
-  FVector ProjectFocusPointInECEFCoordinate = FPlane::PointPlaneProject(
-      CameraInECEFTransform.GetLocation().GetUnsafeNormal(),
-      CameraPlane);
+  double Min, Max;
+  {
+    FVector ProjectCameraAxisX = FPlane::PointPlaneProject(
+        CameraInECEFTransform.GetRotation().GetAxisX(),
+        CameraPlane);
 
-  double maxPitchDegree =
-      AngleD(ProjectCameraToFocusDirection, ProjectFocusPointInECEFCoordinate) -
-      2;
-  maxPitchDegree = maxPitchDegree < 0 ? 0 : maxPitchDegree;
-  double minPitchDegree = maxPitchDegree - 90 + 5;
+    FVector ProjectCameraLocation = FPlane::PointPlaneProject(
+        CameraInECEFTransform.GetLocation().GetUnsafeNormal(),
+        CameraPlane);
 
-  double temp = minPitchDegree;
-  minPitchDegree = -maxPitchDegree;
-  maxPitchDegree = -temp;
-  double angle = FQuat::FindBetween(
-                     ProjectFocusPointInECEFCoordinate,
-                     CameraInECEFTransform.GetLocation().GetUnsafeNormal())
-                     .GetAngle() *
-                 180.0 / PI;
+    double maxPitchDegree =
+        FQuat::FindBetween(ProjectCameraAxisX, ProjectCameraLocation)
+                .GetAngle() *
+            180.0 / PI -
+        0;
+    maxPitchDegree = maxPitchDegree < 0 ? 0 : maxPitchDegree;
+    double minPitchDegree = maxPitchDegree - 90 + 0;
 
-   FVector::CrossProduct(
-      ProjectFocusPointInECEFCoordinate,
-      CameraInECEFTransform.GetLocation().GetUnsafeNormal());
-
-
-  GEngine->AddOnScreenDebugMessage(
-    -1,
-    4,
-    FColor::Red,
-    FString("angle:") + FString::SanitizeFloat(angle));
-  GEngine->AddOnScreenDebugMessage(
-      -1,
-      4,
-      FColor::Red,
-      FString("maxPitchDegree:") + FString::SanitizeFloat(maxPitchDegree));
-  GEngine->AddOnScreenDebugMessage(
-      -1,
-      4,
-      FColor::Red,
-      FString("minPitchDegree:") + FString::SanitizeFloat(minPitchDegree));   
+    double temp = minPitchDegree;
+    minPitchDegree = -maxPitchDegree;
+    maxPitchDegree = -temp - 10;
+    Min = minPitchDegree;
+    Max = maxPitchDegree;
+  }
 
 
-  PitchDegree = FMath::Clamp(PitchDegree, minPitchDegree, maxPitchDegree);
+
+
+  {
+    FVector ProjectCameraToFocusDirection = FPlane::PointPlaneProject(CameraToFocusDirection,
+        CameraPlane);
+
+    FVector ProjectFocusPointInECEFCoordinate = FPlane::PointPlaneProject(
+        FocusPointInECEFCoordinate.GetUnsafeNormal(),
+        CameraPlane);
+
+    double maxPitchDegree = FQuat::FindBetween(
+                                ProjectCameraToFocusDirection,
+                                ProjectFocusPointInECEFCoordinate)
+                                    .GetAngle() *
+                                180.0 / PI -
+                            0;
+    maxPitchDegree = maxPitchDegree < 0 ? 0 : maxPitchDegree;
+    double minPitchDegree = maxPitchDegree - 90 + 0;
+
+    double temp = minPitchDegree;
+    minPitchDegree = -maxPitchDegree;
+    maxPitchDegree = -temp - 10;
+
+    Max = Max > maxPitchDegree ? maxPitchDegree : Max;
+  }
+
+
+
+   PitchDegree = FMath::Clamp(PitchDegree, Min, Max);
+
+
+
+
+
 
   TArray<FTransform> Result;
 	for (size_t i = 1; i <= Num; i++) {
