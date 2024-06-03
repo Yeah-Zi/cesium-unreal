@@ -81,7 +81,7 @@ public:
 
   virtual void ScrollWheelAxis(float value);
 
-    double ScalingInterval = 0.5;
+    double ScalingInterval = 0.25;
   double SinceLastScale = 0;
 };
 
@@ -107,4 +107,39 @@ public:
 
   bool bRotateClickDown = false;
   bool bClickOnEarth = false;
+};
+
+UCLASS()
+class UMirrorThrowInputHandler : public UMirrorManipulatorInputHandler
+{
+  GENERATED_BODY()
+public:
+  UMirrorThrowInputHandler();
+
+  virtual void BeginPlay() override;
+
+  virtual void TickComponent(
+      float DeltaTime,
+      ELevelTick TickType,
+      FActorComponentTickFunction* ThisTickFunction) override;
+
+  virtual void LeftMouseButtonPressed(FVector2D MouseScreenPosition);
+
+  virtual void LeftMouseButtonReleased(FVector2D MouseScreenPosition);
+
+  bool IsLeftMouseButtonPressed = false;
+
+  bool IsFirstCursorClickOnEarth = false;
+
+  double ThrowStartVirtualEarthRadius;
+
+  FVector ThrowStartEarthPositionInCameraCoordinate;
+
+  AVirtualEarthActor* VirtualEarthActor;
+
+  double ThrowInterval = 0.25;
+
+  double AfterThrowClickStartTime = 0;
+
+  double ThrowTime = 0;
 };

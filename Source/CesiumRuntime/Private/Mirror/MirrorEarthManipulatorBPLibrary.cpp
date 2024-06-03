@@ -35,7 +35,10 @@ UMirrorEarthManipulatorBPLibrary::GetManipulatorMoveECEFTransform(
     const FQuat InterpolateQuat = FQuat::Slerp(
         FQuat::Identity,
         EarthPositionMoveToInCameraCoordinateQuat,
-        FMath::Clamp<double>(i * 1.f / double(Num), 0.f, 1.f));
+        FMath::Clamp<double>(
+            sin(i * (DOUBLE_PI / 2 / (Num * 1.0))) / sin(DOUBLE_PI / 2) * 1.0,
+            0.f,
+            1.f));
 
     FTransform EarthInterpolateTransformInCameraCoordinate =
         EarthTransformInCameraCoordinate;
@@ -84,12 +87,12 @@ UMirrorEarthManipulatorBPLibrary::GetManipulatorScaleECEFTransform(
     FVector InterpolateDeltaLocation =
         ScaleValue * ScaleAxis * (CameraPositionRadius - FocusPositionRadius);
 
-    // FVector InterpolateDeltaLocation = FMath::VInterpTo(
-    //     FVector(0, 0, 0),
-    //     DeltaLocation,
-    //     sin(i * (DOUBLE_PI / 2 / (Num * 1.0))) /
-    //         sin(DOUBLE_PI / 2) * 1.0,
-    //     1.0);
+     //FVector InterpolateDeltaLocation = FMath::VInterpTo(
+     //    FVector(0, 0, 0),
+     //    DeltaLocation,
+     //    sin(i * (DOUBLE_PI / 2 / (Num * 1.0))) /
+     //        sin(DOUBLE_PI / 2) * 1.0,
+     //    1.0);
 
     FTransform AfterScaleEarthTransformInCameraCoordinate =
         EarthTransformInCameraCoordinate;
@@ -354,4 +357,46 @@ UMirrorEarthManipulatorBPLibrary::GetManipulatorRotateECEFTransform2(
   }
 
   return resultTransform;
+}
+
+TArray<FTransform>
+UMirrorEarthManipulatorBPLibrary::GetManipulatorThrowECEFTransform(
+    const FTransform& CameraInECEFTransform,
+    const FVector& EarthPositionInCameraCoordinate,
+    const FVector& AfterMoveEarthPositionInCameraCoordinate,
+    const int& Num,
+    double& SuggestTime) {
+
+  FTransform EarthTransformInCameraCoordinate = CameraInECEFTransform.Inverse();
+
+  FVector EarthPositionToEarthCenterDirection =
+      EarthPositionInCameraCoordinate - EarthTransformInCameraCoordinate.GetLocation();
+
+  FVector AfterMoveEarthPositionToEarthCenterDirection =
+      AfterMoveEarthPositionInCameraCoordinate -
+      EarthTransformInCameraCoordinate.GetLocation();
+
+  FQuat BeforeToAfterDirectionQuat = FQuat::FindBetween(
+      EarthPositionToEarthCenterDirection,
+      AfterMoveEarthPositionToEarthCenterDirection);
+
+  FQuat ThrowQuat = FQuat(
+      BeforeToAfterDirectionQuat.GetRotationAxis(),
+      BeforeToAfterDirectionQuat.GetAngle() * 7 >= PI
+          ? (PI - 0.01)
+          : BeforeToAfterDirectionQuat.GetAngle() * 7);
+
+  FVector AfterThrowEarthPositionInCameraCoordinate =
+      ThrowQuat * EarthPositionToEarthCenterDirection +
+      EarthTransformInCameraCoordinate.GetLocation();
+
+  double ThrowDegree = ThrowQuat.GetAngle() * 180.0 / PI;
+  SuggestTime =
+      ((120 * ThrowDegree / 180) > 120 ? (120 * ThrowDegree / 180) : 120) / 60;
+
+  return GetManipulatorMoveECEFTransform(
+      CameraInECEFTransform,
+      EarthPositionInCameraCoordinate,
+      AfterThrowEarthPositionInCameraCoordinate,
+      Num);
 }

@@ -41,4 +41,11 @@ public:
             double yawDegree,
             double pitchDegree,
             const int& tickCount);
+
+        static TArray<FTransform> GetManipulatorThrowECEFTransform(
+            const FTransform& CameraInECEFTransform,
+            const FVector& EarthPositionInCameraCoordinate,
+            const FVector& AfterMoveEarthPositionInCameraCoordinate,
+            const int& Num,
+            double& SuggestTime);
 };

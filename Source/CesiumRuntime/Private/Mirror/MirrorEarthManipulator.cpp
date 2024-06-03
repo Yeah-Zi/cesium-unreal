@@ -20,6 +20,9 @@ AMirrorEarthManipulator::AMirrorEarthManipulator() {
   RotateInputHandler = CreateDefaultSubobject<UMirrorRotateInputHandler>(
       TEXT("RotateInputHandler"));
 
+  ThrowInputHandler = CreateDefaultSubobject<UMirrorThrowInputHandler>(
+      TEXT("ThrowInputHandler"));
+
   RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
   SetRootComponent(RootComponent);
 

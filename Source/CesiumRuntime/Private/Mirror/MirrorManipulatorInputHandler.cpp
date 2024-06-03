@@ -350,3 +350,106 @@ void UMirrorRotateInputHandler::OnMouseMove(
 
         
 }
+
+UMirrorThrowInputHandler::UMirrorThrowInputHandler() {}
+
+void UMirrorThrowInputHandler::BeginPlay() {
+    Super::BeginPlay();
+    VirtualEarthActor = GetWorld()->SpawnActor<AVirtualEarthActor>();
+}
+
+void UMirrorThrowInputHandler::TickComponent(
+    float DeltaTime,
+    ELevelTick TickType,
+    FActorComponentTickFunction* ThisTickFunction) {
+    AfterThrowClickStartTime += DeltaTime;
+}
+
+void UMirrorThrowInputHandler::LeftMouseButtonPressed(
+    FVector2D MouseScreenPosition) {
+    IsLeftMouseButtonPressed = true;
+    APawn* Owner = Cast<APawn>(GetOwner());
+    APlayerController* Controller =
+        Cast<APlayerController>(Owner->GetController());
+
+    FVector UnrealLocation, UnrealDirection;
+    Controller->DeprojectMousePositionToWorld(UnrealLocation, UnrealDirection);
+
+    FHitResult HitResultInUnreal;
+
+    if (UMirrorCoordinatesBPFuncLibrary::LineTraceRealEarthInUnreal(
+            UnrealLocation,
+            UnrealLocation + 99999999999 * UnrealDirection,
+            HitResultInUnreal)) {
+    IsFirstCursorClickOnEarth = true;
+    AfterThrowClickStartTime = 0;
+    }
+
+    FVector HitResultLocationInECEF =
+        UMirrorCoordinatesBPFuncLibrary::UnrealToECEFLocation(
+            HitResultInUnreal.Location);
+
+    FTransform CameraInECEFTransform =
+        UMirrorCoordinatesBPFuncLibrary::GetViewECEFTransform(Owner);
+
+    ThrowStartEarthPositionInCameraCoordinate =
+        CameraInECEFTransform.InverseTransformPosition(HitResultLocationInECEF);
+    ThrowStartVirtualEarthRadius = HitResultLocationInECEF.Length();
+}
+
+void UMirrorThrowInputHandler::LeftMouseButtonReleased(
+    FVector2D MouseScreenPosition) {
+
+    if (!IsFirstCursorClickOnEarth) {
+    return;
+    }
+
+    if (AfterThrowClickStartTime > ThrowInterval) {
+    return;
+    }
+    IsFirstCursorClickOnEarth = false;
+
+    APawn* Owner = Cast<APawn>(GetOwner());
+    APlayerController* Controller =
+        Cast<APlayerController>(Owner->GetController());
+    FVector UnrealLocation, UnrealDirection;
+    Controller->DeprojectMousePositionToWorld(UnrealLocation, UnrealDirection);
+    VirtualEarthActor->SetVirtualEarthRadii(
+        FVector(ThrowStartVirtualEarthRadius));
+
+    FVector ECEFLocation =
+        UMirrorCoordinatesBPFuncLibrary::UnrealToECEFLocation(UnrealLocation);
+
+    FVector ECEFDirection =
+        UMirrorCoordinatesBPFuncLibrary::GetUnrealToECEFTransform()
+            .TransformVector(UnrealDirection);
+
+    FHitResult HitResultInECEF;
+    if (!UMirrorCoordinatesBPFuncLibrary::LineTraceVirtualEarthInECEF(
+            VirtualEarthActor,
+            ECEFLocation,
+            ECEFLocation + 9999999999999 * ECEFDirection,
+            HitResultInECEF)) {
+    return;
+    }
+
+    FTransform CameraInECEFTransform =
+        UMirrorCoordinatesBPFuncLibrary::GetViewECEFTransform(Owner);
+
+    FVector ThrowNowEarthPositionInCameraCoordinate =
+        CameraInECEFTransform.InverseTransformPosition(
+            HitResultInECEF.Location);
+ 
+  TArray<FTransform> ThrowTransformInECEF =
+        UMirrorEarthManipulatorBPLibrary::GetManipulatorThrowECEFTransform(
+            CameraInECEFTransform,
+            ThrowStartEarthPositionInCameraCoordinate,
+            ThrowNowEarthPositionInCameraCoordinate,
+            240,
+            ThrowTime);
+
+    MirrorMoveManagerComponent->SetActorTransforms(
+        EMirrorCoordinate::ECEF,
+      ThrowTransformInECEF,
+        ThrowTime);
+}
