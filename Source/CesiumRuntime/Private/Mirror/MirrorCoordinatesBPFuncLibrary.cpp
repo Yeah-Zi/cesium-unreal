@@ -382,3 +382,71 @@ UMirrorCoordinatesBPFuncLibrary::LonLatHToUnreal(const FVector& LonLatH) {
   return ECEFToUnrealLocation(ECEFPosition);
 }
 
+bool UMirrorCoordinatesBPFuncLibrary::IsInEditorMode() {
+#if WITH_EDITOR
+  return GIsEditor && !IsRunningGame();
+#else
+  return false;
+#endif
+}
+
+bool UMirrorCoordinatesBPFuncLibrary::IsInEditorPlayMode() {
+#if WITH_EDITOR
+  return GIsEditor && GEditor->PlayWorld != nullptr;
+#else
+  return false;
+#endif
+}
+
+void UMirrorCoordinatesBPFuncLibrary::GetCameraPosition(
+    UWorld* World,
+    FVector& OutLocation,
+    FRotator& OutRotation) {
+  if (IsInEditorMode() && !IsInEditorPlayMode()) {
+#if WITH_EDITOR
+    if (GEditor && GEditor->GetActiveViewport()) {
+      FEditorViewportClient* EditorViewportClient =
+          static_cast<FEditorViewportClient*>(
+              GEditor->GetActiveViewport()->GetClient());
+
+      if (EditorViewportClient) {
+        OutLocation = EditorViewportClient->GetViewLocation();
+        OutRotation = EditorViewportClient->GetViewRotation();
+      }
+    }
+#endif
+  } else if (IsInPlayMode() || IsInEditorPlayMode()) {
+    if (World) {
+      APlayerController* PlayerController =
+          UGameplayStatics::GetPlayerController(World, 0);
+      if (PlayerController) {
+        if (PlayerController->GetPawn()) {
+          APawn* PlayerPawn = PlayerController->GetPawn();
+          OutLocation = PlayerPawn->GetActorLocation();
+          OutRotation = PlayerPawn->GetActorRotation();
+        } else if (PlayerController->PlayerCameraManager) {
+          OutLocation =
+              PlayerController->PlayerCameraManager->GetCameraLocation();
+          OutRotation =
+              PlayerController->PlayerCameraManager->GetCameraRotation();
+        }
+      }
+    }
+  }
+}
+
+
+FTransform UMirrorCoordinatesBPFuncLibrary::GetCameraTransform(UWorld* World) {
+  FVector Location;
+  FRotator Rotation;
+  GetCameraPosition(World, Location, Rotation);
+  FTransform result;
+  result.SetLocation(Location);
+  result.SetRotation(Rotation.Quaternion());
+  return result;
+}
+
+bool UMirrorCoordinatesBPFuncLibrary::IsInPlayMode() {
+   return !GIsEditor || IsRunningGame(); 
+}
+

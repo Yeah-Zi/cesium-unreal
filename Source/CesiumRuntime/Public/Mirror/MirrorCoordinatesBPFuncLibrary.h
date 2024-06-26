@@ -5,6 +5,15 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "VirtualEarthActor.h"
+#if WITH_EDITOR
+#include "Editor.h"
+#include "Editor/UnrealEd/Public/EditorViewportClient.h"
+#include "Editor/UnrealEd/Public/LevelEditorViewport.h"
+#include "Engine/Engine.h"
+#endif
+#include "GameFramework/PlayerController.h"
+#include "Kismet/GameplayStatics.h"
+
 #include "MirrorCoordinatesBPFuncLibrary.generated.h"
 
 USTRUCT()
@@ -223,23 +232,19 @@ public:
       FVector End,
       FHitResult& result);
 
-    UFUNCTION(
+  UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
-  static bool LineTraceRealEarthInECEF(
-      FVector Start,
-      FVector End,
-    FHitResult& result);
+  static bool
+  LineTraceRealEarthInECEF(FVector Start, FVector End, FHitResult& result);
 
   UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
-  static bool LineTraceRealEarthInUnreal(
-      FVector Start,
-      FVector End,
-      FHitResult& HitResult);
+  static bool
+  LineTraceRealEarthInUnreal(FVector Start, FVector End, FHitResult& HitResult);
 
   UFUNCTION(
       BlueprintCallable,
@@ -291,27 +296,58 @@ public:
       meta = (BlueprintAutocast))
   static FTransform GetViewECEFTransform(const APawn* Pawn);
 
-    UFUNCTION(
+  UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
   static FVector ECEFToLonLatH(const FVector& ECEFPosition);
 
-    UFUNCTION(
+  UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
   static FVector UnrealToLonLatH(const FVector& UnrealPosition);
 
-    UFUNCTION(
-        BlueprintCallable,
-        Category = "Coordinates",
-        meta = (BlueprintAutocast))
+  UFUNCTION(
+      BlueprintCallable,
+      Category = "Coordinates",
+      meta = (BlueprintAutocast))
   static FVector LonLatHToECEF(const FVector& LonLatH);
 
-      UFUNCTION(
+  UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
   static FVector LonLatHToUnreal(const FVector& LonLatH);
+
+  UFUNCTION(
+      BlueprintCallable,
+      Category = "Coordinates",
+      meta = (BlueprintAutocast))
+  static bool IsInEditorMode();
+
+  UFUNCTION(
+      BlueprintCallable,
+      Category = "Coordinates",
+      meta = (BlueprintAutocast))
+  static bool IsInEditorPlayMode();
+
+  UFUNCTION(
+      BlueprintCallable,
+      Category = "Coordinates",
+      meta = (BlueprintAutocast))
+  static bool IsInPlayMode();
+
+  UFUNCTION(
+      BlueprintCallable,
+      Category = "Coordinates",
+      meta = (BlueprintAutocast))
+  static void
+  GetCameraPosition(UWorld* World, FVector& OutLocation, FRotator& OutRotation);
+
+  UFUNCTION(
+      BlueprintCallable,
+      Category = "Coordinates",
+      meta = (BlueprintAutocast))
+  static FTransform GetCameraTransform(UWorld* World);
 };
