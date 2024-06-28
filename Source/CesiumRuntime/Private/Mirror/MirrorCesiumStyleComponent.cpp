@@ -140,7 +140,7 @@ bool UMirrorCesiumStyleComponent::Evaluate(const Expression& expression) {
   TArray<FString> featureMetadata = GetFeatureIDSetMetadata();
   script::EngineScope enter(V8Engine.get());
   std::string js_code =
-      readFileToString("D:/GitHubProject/ĞÂ½¨ÎÄ¼ş¼Ğ/src/jsep.js");
+      readFileToString("D:/GitHubProject/æ–°å»ºæ–‡ä»¶å¤¹/src/jsep.js");
   script::EngineScope enter(V8Engine.get());
 
 
@@ -152,9 +152,9 @@ bool UMirrorCesiumStyleComponent::Evaluate(const Expression& expression) {
 auto ConvertTMapToJson = [](const TMap<FString, FString>& StringMap) {
   FString JsonString = TEXT("{");
 
-  // ±éÀú TMap ²¢½«¼üÖµ¶ÔÆ´½Óµ½ JsonString
+  // éå† TMap å¹¶å°†é”®å€¼å¯¹æ‹¼æ¥åˆ° JsonString
   for (const auto& Entry : StringMap) {
-    // ½«¼üºÍÖµ×ªÒå´¦Àí
+    // å°†é”®å’Œå€¼è½¬ä¹‰å¤„ç†
     FString EscapedKey = Entry.Key;
     FString EscapedValue = Entry.Value;
 
@@ -174,7 +174,7 @@ auto ConvertTMapToJson = [](const TMap<FString, FString>& StringMap) {
                  EscapedValue + "\"" + ",";
   }
 
-  // ÒÆ³ıÄ©Î²¶àÓàµÄ¶ººÅ
+  // ç§»é™¤æœ«å°¾å¤šä½™çš„é€—å·
   if (StringMap.Num() > 0) {
     JsonString.RemoveAt(JsonString.Len() - 1);
   }

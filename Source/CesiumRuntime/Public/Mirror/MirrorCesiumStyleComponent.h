@@ -31,7 +31,7 @@ struct Expression {
     }
 
     {
-      // ´ÓJSON¶ÔÏóÖĞÌáÈ¡Êı¾İ
+      // ä»JSONå¯¹è±¡ä¸­æå–æ•°æ®
       TSharedPtr<FJsonObject> DefinesJsonObject =
           JsonObject->GetObjectField("defines");
 

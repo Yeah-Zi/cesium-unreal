@@ -295,7 +295,7 @@ UMirrorEarthManipulatorBPLibrary::GetManipulatorRotateECEFTransform2(
   FVector cameraToFocalNormal =
       (cameraLocation - focalPointInSphereCoordinate).GetSafeNormal();
 
-  // 计算轴点与球心的球向量在球心沿Y轴方向上的投影，P0为投影点
+  // 璁＄畻杞寸偣涓庣悆蹇冪殑鐞冨悜閲忓湪鐞冨績娌縔杞存柟鍚戜笂鐨勬姇褰憋紝P0涓烘姇褰辩偣
   FVector V1 = focalPointInSphereCoordinate;
   FVector V2 = cameraRotation.GetAxisY();
   double LV1 = sqrt(pow(V1.X, 2) + pow(V1.Y, 2) + pow(V1.Z, 2));

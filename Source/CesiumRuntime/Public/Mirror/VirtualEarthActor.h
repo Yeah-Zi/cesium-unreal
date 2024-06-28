@@ -15,7 +15,7 @@ class CESIUMRUNTIME_API AVirtualEarthActor : public AStaticMeshActor {
 public:
   AVirtualEarthActor();
 
-  /* unit£º meter*/
+  /* unitï¼š meter*/
   UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
