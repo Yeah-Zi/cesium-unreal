@@ -81,6 +81,12 @@ public class CesiumRuntime : ModuleRules
 
         string[] libs = new string[]
         {
+            //Mirror
+            "ScriptX",
+            "v8.dll",
+            "v8_libbase.dll",
+            "v8_libplatform.dll",
+            //Mirror,
             "async++",
             "Cesium3DTiles",
             "Cesium3DTilesContent",
@@ -109,7 +115,8 @@ public class CesiumRuntime : ModuleRules
             "tinyxml2",
             "turbojpeg",
             "uriparser",
-            "webpdecoder",
+            "webpdecoder"
+
         };
 
         // Use our own copy of MikkTSpace on Android.
@@ -219,5 +226,33 @@ public class CesiumRuntime : ModuleRules
         CppStandard = CppStandardVersion.Cpp17;
 #endif
         bEnableExceptions = true;
+
+
+
+    {
+      //临时解决cmake中定义的SCRIPTX_BACKEND_TRAIT_PREFIX宏未被识别的未知问题
+      PrivateDefinitions.Add("SCRIPTX_BACKEND_TRAIT_PREFIX = ../backend/V8/trait/Trait");
+      PublicDefinitions.Add("SCRIPTX_BACKEND_TRAIT_PREFIX = ../backend/V8/trait/Trait");
+      //临时解决editor模式下bEnableUndefinedIdentifierWarnings = false;未生效，无法以0替换未定义宏的未知问题
+      PublicDefinitions.AddRange(
+            new string[]
+            {
+              "V8_HAS_ATTRIBUTE_ALWAYS_INLINE = 0",
+              "V8_HAS_ATTRIBUTE_NOINLINE = 0",
+              "V8_HAS_BUILTIN_EXPECT = 0",
+              "V8_HAS_ATTRIBUTE_WARN_UNUSED_RESULT = 0",
+              "USING_V8_SHARED = 0",
+              "V8_OS_POSIX = 0"
+            }
+        );
+
+      PublicIncludePaths.AddRange(
+          new string[] {
+                      Path.Combine(ModuleDirectory, "../ThirdParty/include"),
+                      Path.Combine(ModuleDirectory, "../ThirdParty/include/v8")
+          }
+      );
     }
+
+  }
 }
