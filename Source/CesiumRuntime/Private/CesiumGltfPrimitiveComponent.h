@@ -15,6 +15,11 @@
 #include <cstdint>
 #include <glm/mat4x4.hpp>
 #include <unordered_map>
+#include "Mirror/MirrorCesiumStyleComponent.h"
+#include "CesiumMaterialUserData.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Engine/StaticMesh.h"
+#include "Engine/Texture.h"
 #include "CesiumGltfPrimitiveComponent.generated.h"
 
 namespace CesiumGltf {
@@ -105,6 +110,7 @@ public:
 
   std::optional<Cesium3DTilesSelection::BoundingVolume> boundingVolume;
 
+  UMirrorCesiumStyleComponent* StyleComponent;
   /**
    * Updates this component's transform from a new double-precision
    * transformation from the Cesium world to the Unreal Engine world, as well as
@@ -114,7 +120,13 @@ public:
    */
   void UpdateTransformFromCesium(const glm::dmat4& CesiumToUnrealTransform);
 
+  virtual void BeginPlay() override;
+
   virtual void BeginDestroy() override;
 
   virtual FBoxSphereBounds CalcBounds(const FTransform& LocalToWorld) const;
+
+  TArray<UMaterialInstanceDynamic*> GetDynamicInstanceMaterials();
+
+  UCesiumMaterialUserData* GetMaterialUserData(UMaterialInstance* Material);
 };

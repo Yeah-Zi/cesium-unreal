@@ -81,6 +81,22 @@ public:
   ACesium3DTileset();
   virtual ~ACesium3DTileset();
 
+public:
+  UPROPERTY(
+      EditAnywhere,
+      BlueprintReadWrite,
+      BlueprintGetter = GetStyleCode,
+      BlueprintSetter = SetStyleCode)
+  FString StyleCode = "{}" ;
+
+  UFUNCTION(BlueprintCallable, Category = "Mirror")
+  FString GetStyleCode() const;
+
+  UFUNCTION(BlueprintCallable, Category = "Mirror")
+  void SetStyleCode(FString InStyleCode);
+
+
+
 private:
   UPROPERTY(VisibleAnywhere, Category = "Cesium") USceneComponent* Root;
 

@@ -170,7 +170,9 @@ public class CesiumRuntime : ModuleRules
                 "DeveloperSettings",
                 "UMG",
                 "Renderer",
-		"InputCore"
+		            "InputCore",
+                "JsonUtilities" ,
+                "Json" ,
             }
         );
 
@@ -245,7 +247,14 @@ public class CesiumRuntime : ModuleRules
               "V8_OS_POSIX = 0"
             }
         );
+      // bin
+      string DllPath = Path.Combine(ModuleDirectory, "../ThirdParty/bin");
+      string TargetOutputDir = Path.Combine(ModuleDirectory, "..", "..", "Binaries", Target.Platform.ToString());
 
+      foreach (string DllFile in Directory.EnumerateFiles(DllPath, "*.*", SearchOption.AllDirectories))
+      {
+        RuntimeDependencies.Add(Path.Combine(TargetOutputDir, Path.GetFileName(DllFile)), Path.Combine(DllPath, DllFile));
+      }
       PublicIncludePaths.AddRange(
           new string[] {
                       Path.Combine(ModuleDirectory, "../ThirdParty/include"),

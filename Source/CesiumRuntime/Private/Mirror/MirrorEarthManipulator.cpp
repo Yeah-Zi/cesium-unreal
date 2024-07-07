@@ -2,6 +2,8 @@
 
 #include "Mirror/MirrorEarthManipulator.h"
 #include "Mirror/MirrorCoordinatesBPFuncLibrary.h"
+#include "CesiumRuntime/Public/CesiumPropertyArrayBlueprintLibrary.h"
+
 // Sets default values
 AMirrorEarthManipulator::AMirrorEarthManipulator() {
   // Set this pawn to call Tick() every frame.  You can turn this off to improve

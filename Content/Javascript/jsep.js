@@ -1161,6 +1161,12 @@ class Executor {
 		this.types = {};
 	}
 
+	evaluateWithVariables(node, inVariables) {
+		this.variables = inVariables;
+		this.setVariable("Color", Color);
+		return this.evaluate(node);
+	}
+
 	evaluate(node, context = null) {
 		switch (node.type) {
 			case 'Compound':
@@ -1297,9 +1303,6 @@ class Executor {
 
 // 测试代码
 const executor = new Executor();
-executor.setVariable('a', 1);
-executor.setVariable('b', 2);
-executor.setVariable('c', 3);
 
 // 添加自定义函数
 executor.addFunction('square', x => x * x);
@@ -1322,27 +1325,66 @@ Object.getOwnPropertyNames(String.prototype).forEach(name => {
 
 
 // 定义并添加自定义类型
-class Person {
-	constructor(name, age) {
-		this.name = name;
-		this.age = age;
-	}
+executor.addType('Color', Color);
 
-	greet() {
-		return `Hello, my name is ${this.name} and I am ${this.age} years old.`;
-	}
+function ComputeExpressionResult(ast, metadata) {
+	//return executor.evaluate(ast);
 
-	gg() {
-		return `gg`;
-	}
+	return executor.evaluateWithVariables(ast, metadata);
 }
-executor.addType('Person', Person);
-function ComputeExpressionResult(expression, metadatas) {
-	const ast = jsep(expression);
-	const result = new Array();
 
-	for (const value of modelMetadata) {
-		result.push(executor.evaluate(ast));
+function RunExpressionConditions(conditions, metadatas) {
+	var Result = [];
+	{ // Expression
+		var singleCondition = true;
+		var ast;
+		if (typeof conditions == "string") {
+			ast = jsep(conditions);
+		}
+		else {
+			singleCondition = false;
+			ast = [];
+			for (var condition of conditions["conditions"]) {
+				ast.push({ "conditionAst": jsep(condition[0]), "resultAst": jsep(condition[1]) });
+			}
+		}
+		if (singleCondition) {
+			for (var metadata of metadatas) {
+				try {
+					Result.push(ComputeExpressionResult(ast, metadata));
+				} catch (e) {
+					log(e);
+				}
+				//Result.push(ComputeExpressionResult(ast, metadata));
+				//Result.push(true);
+
+			}
+		}
+		else {
+			for (var metadata of metadatas) {
+				for (var condition of ast) {
+					if (ComputeExpressionResult(condition["conditionAst"])) {
+						Result.push(ComputeExpressionResult(condition["resultAst"], metadata));
+						break;
+					}
+				}
+			}
+		}
 	}
-	return result;
+	return Result;
+}
+
+function Styling(expressionStr, metadatas) {
+	const expressionObj = JSON.parse(expressionStr);
+	var colorResult = new Array(metadatas.length).fill(Color.TRANSPARENT);
+	var showResult = new Array(metadatas.length).fill(true);
+
+	if (expressionObj.color !== undefined) {
+		colorResult = RunExpressionConditions(expressionObj.color, metadatas);
+	}
+	if (expressionObj.show !== undefined) {
+		showResult = RunExpressionConditions(expressionObj.show, metadatas);
+	}
+	//var 
+	return { "color": colorResult, "show": showResult };
 }

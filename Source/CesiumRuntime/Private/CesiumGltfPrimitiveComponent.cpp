@@ -13,6 +13,7 @@
 #include <CesiumGltf/MeshPrimitive.h>
 #include <CesiumGltf/Model.h>
 #include <variant>
+#include "CesiumGltfComponent.h"
 
 // Prevent deprecation warnings while initializing deprecated metadata structs.
 PRAGMA_DISABLE_DEPRECATION_WARNINGS
@@ -23,6 +24,9 @@ UCesiumGltfPrimitiveComponent::UCesiumGltfPrimitiveComponent() {
   pModel = nullptr;
   pMeshPrimitive = nullptr;
   pTilesetActor = nullptr;
+  StyleComponent =
+      CreateDefaultSubobject<UMirrorCesiumStyleComponent>(FName("StyleComponent"));
+  StyleComponent->Target = this;
 }
 
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
@@ -55,6 +59,11 @@ void UCesiumGltfPrimitiveComponent::UpdateTransformFromCesium(
     this->MarkRenderTransformDirty();
     this->SendPhysicsTransform(ETeleportType::ResetPhysics);
   }
+}
+
+void UCesiumGltfPrimitiveComponent::BeginPlay() {
+  Super::BeginPlay();
+
 }
 
 void UCesiumGltfPrimitiveComponent::BeginDestroy() {
@@ -113,4 +122,50 @@ FBoxSphereBounds UCesiumGltfPrimitiveComponent::CalcBounds(
   return std::visit(
       CalcBoundsOperation{LocalToWorld, this->HighPrecisionNodeTransform},
       *this->boundingVolume);
+}
+
+TArray<UMaterialInstanceDynamic*>
+UCesiumGltfPrimitiveComponent::GetDynamicInstanceMaterials() {
+  TArray<UMaterialInstanceDynamic*> results;
+  TArray<UMaterialInterface*> MaterialInterfaces = GetMaterials();
+  for (size_t i = 0; i < MaterialInterfaces.Num(); i++) {
+    UMaterialInstanceDynamic* pMaterial =
+        Cast<UMaterialInstanceDynamic>(MaterialInterfaces[i]);
+
+    if (!pMaterial) {
+      continue;
+    }
+    results.Add(pMaterial);
+  }
+  return results;
+}
+
+UCesiumMaterialUserData* UCesiumGltfPrimitiveComponent::GetMaterialUserData(
+    UMaterialInstance* Material) {
+  UCesiumGltfComponent* GltfComponent = Cast<UCesiumGltfComponent>(GetOuter());
+  if (!GltfComponent || !GltfComponent->IsValidLowLevelFast() ||
+      !IsValid(GltfComponent)) {
+    return nullptr;
+  }
+  UMaterialInstance* pBaseAsMaterialInstance = nullptr;
+
+  if (Material->IsChildOf(GltfComponent->BaseMaterial)) {
+    pBaseAsMaterialInstance =
+        Cast<UMaterialInstance>(GltfComponent->BaseMaterial);
+  } else if (Material->IsChildOf(GltfComponent->BaseMaterialWithTranslucency)) {
+    pBaseAsMaterialInstance =
+        Cast<UMaterialInstance>(GltfComponent->BaseMaterialWithTranslucency);
+  } else if (Material->IsChildOf(GltfComponent->BaseMaterialWithWater)) {
+    pBaseAsMaterialInstance =
+        Cast<UMaterialInstance>(GltfComponent->BaseMaterialWithWater);
+  }
+
+  if (!pBaseAsMaterialInstance) {
+    return nullptr;
+  }
+  UCesiumMaterialUserData* pCesiumData =
+      pBaseAsMaterialInstance
+          ? pBaseAsMaterialInstance->GetAssetUserData<UCesiumMaterialUserData>()
+          : nullptr;
+  return pCesiumData;
 }

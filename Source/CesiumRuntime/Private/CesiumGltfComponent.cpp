@@ -958,6 +958,61 @@ static void loadPrimitiveFeaturesMetadata(
       pMetadata ? FCesiumPrimitiveMetadata(primitive, *pMetadata)
                 : FCesiumPrimitiveMetadata();
 
+
+  {
+    int FeatureIDSetIndex = 0;
+
+    const FCesiumPrimitiveFeatures& features =
+        primitiveResult.Features;
+    const TArray<FCesiumFeatureIdSet>& featureIDSets =
+        UCesiumPrimitiveFeaturesBlueprintLibrary::GetFeatureIDSets(features);
+    if (FeatureIDSetIndex >= 0 && FeatureIDSetIndex < featureIDSets.Num()) {
+      const FCesiumFeatureIdSet& featureIDSet =
+          featureIDSets[FeatureIDSetIndex];
+      const int64 propertyTableIndex =
+          UCesiumFeatureIdSetBlueprintLibrary::GetPropertyTableIndex(
+              featureIDSet);
+
+      const FCesiumFeatureIdAttribute& featureIDAttribute =
+          UCesiumFeatureIdSetBlueprintLibrary::GetAsFeatureIDAttribute(
+              featureIDSet);
+
+      int64 vertexCount =
+          UCesiumFeatureIdAttributeBlueprintLibrary::GetVertexCount(
+              featureIDAttribute);
+
+      if (duplicateVertices) {
+        for (int64_t i = 0; i < indices.Num(); ++i) {
+          FStaticMeshBuildVertex& vertex = vertices[i];
+          uint32 vertexIndex = indices[i];
+          if (vertexIndex >= 0 && vertexIndex < vertexCount) {
+            float featureId = static_cast<float>(
+                UCesiumFeatureIdAttributeBlueprintLibrary::
+                    GetFeatureIDForVertex(featureIDAttribute, vertexIndex));
+            vertex.UVs[7] = TMeshVector2(featureId, 0.0f);
+          } else {
+            vertex.UVs[7] = TMeshVector2(0.0f, 0.0f);
+          }
+        }
+      } else {
+        for (int64_t i = 0; i < vertices.Num(); ++i) {
+          FStaticMeshBuildVertex& vertex = vertices[i];
+          if (i < vertexCount) {
+            float featureId = static_cast<float>(
+                UCesiumFeatureIdAttributeBlueprintLibrary::
+                    GetFeatureIDForVertex(featureIDAttribute, i));
+            vertex.UVs[7] = TMeshVector2(featureId, 0.0f);
+          } else {
+
+            vertex.UVs[7] = TMeshVector2(0.0f, 0.0f);
+          }
+        }
+      }
+    }
+  }
+
+
+
   PRAGMA_DISABLE_DEPRECATION_WARNINGS
   primitiveResult.Metadata_DEPRECATED = FCesiumMetadataPrimitive{
       primitiveResult.Features,
@@ -1393,6 +1448,14 @@ static void loadPrimitive(
       textureResources);
 
   {
+    //for (size_t i = 0; i < length; i++) {
+    //}
+
+
+  }
+
+
+  {
     TRACE_CPUPROFILER_EVENT_SCOPE(Cesium::loadTextures)
     primitiveResult.baseColorTexture = loadTexture(
         model,
@@ -1592,8 +1655,7 @@ static void loadPrimitive(
 
     LODResources.VertexBuffers.StaticMeshVertexBuffer.Init(
         StaticMeshBuildVertices,
-        gltfToUnrealTexCoordMap.size() == 0 ? 1
-                                            : gltfToUnrealTexCoordMap.size(),
+        8,
         false);
   }
 
@@ -3185,6 +3247,29 @@ static void loadPrimitiveGameThreadPart(
             EMaterialParameterAssociation::LayerParameter,
             metadataIndex);
       }
+
+      featuresMetadataIndex = pCesiumData->LayerNames.Find("StyleColor");
+      if (featuresMetadataIndex >= 0) {
+        SetFeaturesMetadataParameterValues(
+            model,
+            *pGltf,
+            loadResult,
+            pMaterial,
+            EMaterialParameterAssociation::LayerParameter,
+            featuresMetadataIndex);
+      }
+
+      featuresMetadataIndex = pCesiumData->LayerNames.Find("StyleVisible");
+      if (featuresMetadataIndex >= 0) {
+        SetFeaturesMetadataParameterValues(
+            model,
+            *pGltf,
+            loadResult,
+            pMaterial,
+            EMaterialParameterAssociation::LayerParameter,
+            featuresMetadataIndex);
+      }
+
     }
   }
 
@@ -3266,6 +3351,8 @@ static void loadPrimitiveGameThreadPart(
     TRACE_CPUPROFILER_EVENT_SCOPE(Cesium::RegisterComponent)
     pMesh->RegisterComponent();
   }
+
+  pMesh->StyleComponent->Evaluate(pTilesetActor->GetStyleCode());
 }
 
 /*static*/ TUniquePtr<UCesiumGltfComponent::HalfConstructed>

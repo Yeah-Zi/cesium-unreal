@@ -112,6 +112,11 @@ ACesium3DTileset::ACesium3DTileset()
 }
 
 ACesium3DTileset::~ACesium3DTileset() { this->DestroyTileset(); }
+FString ACesium3DTileset::GetStyleCode() const { return StyleCode; }
+void ACesium3DTileset::SetStyleCode(FString InStyleCode) {
+  StyleCode = InStyleCode;
+  RefreshTileset();
+}
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
 TSoftObjectPtr<ACesiumGeoreference> ACesium3DTileset::GetGeoreference() const {
@@ -2185,6 +2190,7 @@ void ACesium3DTileset::PostEditChangeProperty(
           GET_MEMBER_NAME_CHECKED(ACesium3DTileset, ShowCreditsOnScreen) ||
       PropName == GET_MEMBER_NAME_CHECKED(ACesium3DTileset, Root) ||
       PropName == GET_MEMBER_NAME_CHECKED(ACesium3DTileset, CesiumIonServer) ||
+      PropName == GET_MEMBER_NAME_CHECKED(ACesium3DTileset, StyleCode) ||
       // For properties nested in structs, GET_MEMBER_NAME_CHECKED will prefix
       // with the struct name, so just do a manual string comparison.
       PropNameAsString == TEXT("RenderCustomDepth") ||
