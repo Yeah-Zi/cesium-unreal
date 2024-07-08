@@ -1008,6 +1008,19 @@ static void loadPrimitiveFeaturesMetadata(
           }
         }
       }
+    } else {
+      if (duplicateVertices) {
+        for (int64_t i = 0; i < indices.Num(); ++i) {
+          FStaticMeshBuildVertex& vertex = vertices[i];
+          uint32 vertexIndex = indices[i];
+          vertex.UVs[7] = TMeshVector2(0.0f, 0.0f);
+        }
+      } else {
+        for (int64_t i = 0; i < vertices.Num(); ++i) {
+          FStaticMeshBuildVertex& vertex = vertices[i];
+          vertex.UVs[7] = TMeshVector2(0.0f, 0.0f);
+        }
+      }
     }
   }
 
