@@ -124,7 +124,8 @@ FVector UMirrorCoordinatesBPFuncLibrary::ENUToUnrealLocation(
 FVector UMirrorCoordinatesBPFuncLibrary::ECEFToENULocation(
     const FVector& ENULonLatH,
     const FVector& Location) {
-  return FVector();
+  return ENUToECEFTransform(ENULonLatH, FTransform())
+      .InverseTransformPosition(Location);
 }
 
 FVector
