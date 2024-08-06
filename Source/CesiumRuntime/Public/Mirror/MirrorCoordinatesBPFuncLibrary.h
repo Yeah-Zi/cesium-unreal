@@ -26,7 +26,7 @@ struct CESIUMRUNTIME_API FGeographicCoordinateGesture {
 };
 
 /**
- * now we have Coordinate Include {ENU, ECEF, Unreal}
+ * now we have Coordinate Include {ESU, ECEF, Unreal}
  */
 UCLASS()
 class CESIUMRUNTIME_API UMirrorCoordinatesBPFuncLibrary
@@ -39,31 +39,31 @@ public:
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
-  static FTransform ENUToENUTransform(
-      const FVector& ENULonLatH,
+  static FTransform ESUToESUTransform(
+      const FVector& ESULonLatH,
       const FTransform& Transform,
-      const FVector& ToENULonLatH);
+      const FVector& ToESULonLatH);
 
   UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
   static FTransform
-  ENUToECEFTransform(const FVector& ENULonLatH, const FTransform& Transform);
+  ESUToECEFTransform(const FVector& ESULonLatH, const FTransform& Transform);
 
   UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
   static FTransform
-  ENUToUnrealTransform(const FVector& ENULonLatH, const FTransform& Transform);
+  ESUToUnrealTransform(const FVector& ESULonLatH, const FTransform& Transform);
 
   UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
   static FTransform
-  ECEFToENUTransform(const FVector& ENULonLatH, const FTransform& Transform);
+  ECEFToESUTransform(const FVector& ESULonLatH, const FTransform& Transform);
 
   UFUNCTION(
       BlueprintCallable,
@@ -76,7 +76,7 @@ public:
       Category = "Coordinates",
       meta = (BlueprintAutocast))
   static FTransform
-  UnrealToENUTransform(const FVector& ENULonLatH, const FTransform& Transform);
+  UnrealToESUTransform(const FVector& ESULonLatH, const FTransform& Transform);
 
   UFUNCTION(
       BlueprintCallable,
@@ -88,7 +88,7 @@ public:
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
-  static FTransform ENULookAt(
+  static FTransform ESULookAt(
       const FVector& LonLatH,
       const FTransform& Transform,
       const FVector& LookAtLocation,
@@ -122,9 +122,9 @@ public:
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
-  static FVector ENUToENULocation(
-      const FVector& ENULonLatH,
-      const FVector& ToENULonLatH,
+  static FVector ESUToESULocation(
+      const FVector& ESULonLatH,
+      const FVector& ToESULonLatH,
       const FVector& Location);
 
   UFUNCTION(
@@ -132,21 +132,21 @@ public:
       Category = "Coordinates",
       meta = (BlueprintAutocast))
   static FVector
-  ENUToECEFLocation(const FVector& ENULonLatH, const FVector& Location);
+  ESUToECEFLocation(const FVector& ESULonLatH, const FVector& Location);
 
   UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
   static FVector
-  ENUToUnrealLocation(const FVector& ENULonLatH, const FVector& Location);
+  ESUToUnrealLocation(const FVector& ESULonLatH, const FVector& Location);
 
   UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
   static FVector
-  ECEFToENULocation(const FVector& ENULonLatH, const FVector& Location);
+  ECEFToESULocation(const FVector& ESULonLatH, const FVector& Location);
 
   UFUNCTION(
       BlueprintCallable,
@@ -159,7 +159,7 @@ public:
       Category = "Coordinates",
       meta = (BlueprintAutocast))
   static FVector
-  UnrealToENULocation(const FVector& ENULonLatH, const FVector& Location);
+  UnrealToESULocation(const FVector& ESULonLatH, const FVector& Location);
 
   UFUNCTION(
       BlueprintCallable,

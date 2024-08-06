@@ -4,54 +4,59 @@
 #include "Kismet/GameplayStatics.h"
 
 UWorld* UMirrorCoordinatesBPFuncLibrary::World = nullptr;
-FTransform UMirrorCoordinatesBPFuncLibrary::ENUToENUTransform(
-    const FVector& ENULonLatH,
+FTransform UMirrorCoordinatesBPFuncLibrary::ESUToESUTransform(
+    const FVector& ESULonLatH,
     const FTransform& Transform,
-    const FVector& ToENULonLatH) {
-  FTransform OriginENUTransform = ENUToECEFTransform(ENULonLatH, Transform);
-  FTransform ToENUTransform = ENUToECEFTransform(ToENULonLatH, FTransform());
-  return OriginENUTransform * ToENUTransform.Inverse();
+    const FVector& ToESULonLatH) {
+  FTransform OriginESUTransform = ESUToECEFTransform(ESULonLatH, Transform);
+  FTransform ToESUTransform = ESUToECEFTransform(ToESULonLatH, FTransform());
+  return OriginESUTransform * ToESUTransform.Inverse();
 }
 
-FTransform UMirrorCoordinatesBPFuncLibrary::ENUToECEFTransform(
-    const FVector& ENULonLatH,
+FTransform UMirrorCoordinatesBPFuncLibrary::ESUToECEFTransform(
+    const FVector& ESULonLatH,
     const FTransform& Transform) {
-  FVector ENUOriginInECEF =
+  FVector ESUOriginInECEF =
       UCesiumWgs84Ellipsoid::LongitudeLatitudeHeightToEarthCenteredEarthFixed(
-          ENULonLatH);
+          ESULonLatH);
 
-  FVector ENUOriginUpAxis =
-      UCesiumWgs84Ellipsoid::GeodeticSurfaceNormal(ENUOriginInECEF);
+  FVector ESUOriginUpAxis =
+      UCesiumWgs84Ellipsoid::GeodeticSurfaceNormal(ESUOriginInECEF);
 
-  FVector ENUOriginEastAxis = GetECEFEastAxisWithLonLatH(ENULonLatH);
+  FVector ESUOriginEastAxis = GetECEFEastAxisWithLonLatH(ESULonLatH);
 
-  FVector ENUOriginNorthAxis = GetECEFNorthAxisWithLonLatH(ENULonLatH);
+  FVector ESUOriginNorthAxis = GetECEFNorthAxisWithLonLatH(ESULonLatH);
 
-  FQuat ENUQuatInECEF = CalculateQuatFromAxes(
-      ENUOriginEastAxis,
-      ENUOriginNorthAxis,
-      ENUOriginUpAxis);
+  FQuat ESUQuatInECEF = CalculateQuatFromAxes(
+      ESUOriginEastAxis,
+      ESUOriginNorthAxis,
+      ESUOriginUpAxis);
 
-  FTransform ECEFTransform;
-  ECEFTransform.SetLocation(ENUOriginInECEF);
-  ECEFTransform.SetRotation(ENUQuatInECEF);
-  return Transform * ECEFTransform;
+  FTransform ENUToESUTransfrom;
+  ENUToESUTransfrom.SetRotation(FRotator(0, 180, 0).Quaternion());
+  ENUToESUTransfrom.SetScale3D(FVector(-1, 1, 1));
+  
+
+  FTransform ENUECEFTransform;
+  ENUECEFTransform.SetLocation(ESUOriginInECEF);
+  ENUECEFTransform.SetRotation(ESUQuatInECEF);
+  return Transform * (ENUToESUTransfrom * ENUECEFTransform);
 }
 
-FTransform UMirrorCoordinatesBPFuncLibrary::ENUToUnrealTransform(
-    const FVector& ENULonLatH,
+FTransform UMirrorCoordinatesBPFuncLibrary::ESUToUnrealTransform(
+    const FVector& ESULonLatH,
     const FTransform& Transform) {
-  FTransform ECEFTransform = ENUToECEFTransform(ENULonLatH, Transform);
+  FTransform ECEFTransform = ESUToECEFTransform(ESULonLatH, Transform);
   
   return ECEFTransform * GetECEFToUnrealTransform();
 }
 
-FTransform UMirrorCoordinatesBPFuncLibrary::ECEFToENUTransform(
-    const FVector& ENULonLatH,
+FTransform UMirrorCoordinatesBPFuncLibrary::ECEFToESUTransform(
+    const FVector& ESULonLatH,
     const FTransform& Transform) {
-  FTransform ENUECEFTransform = ENUToECEFTransform(ENULonLatH, FTransform());
+  FTransform ESUECEFTransform = ESUToECEFTransform(ESULonLatH, FTransform());
 
-  return Transform * ENUECEFTransform.Inverse();
+  return Transform * ESUECEFTransform.Inverse();
 }
 
 FTransform UMirrorCoordinatesBPFuncLibrary::ECEFToUnrealTransform(
@@ -60,13 +65,13 @@ FTransform UMirrorCoordinatesBPFuncLibrary::ECEFToUnrealTransform(
   return Transform * a;
 }
 
-FTransform UMirrorCoordinatesBPFuncLibrary::UnrealToENUTransform(
-    const FVector& ENULonLatH,
+FTransform UMirrorCoordinatesBPFuncLibrary::UnrealToESUTransform(
+    const FVector& ESULonLatH,
     const FTransform& Transform) {
   FTransform ECEFTransform = Transform * GetUnrealToECEFTransform();
 
-  FTransform ENUECEFTransform = ENUToECEFTransform(ENULonLatH, FTransform());
-  return ECEFTransform * ENUECEFTransform.Inverse();
+  FTransform ESUECEFTransform = ESUToECEFTransform(ESULonLatH, FTransform());
+  return ECEFTransform * ESUECEFTransform.Inverse();
 }
 
 FTransform UMirrorCoordinatesBPFuncLibrary::UnrealToECEFTransform(
@@ -74,8 +79,8 @@ FTransform UMirrorCoordinatesBPFuncLibrary::UnrealToECEFTransform(
   return Transform * GetUnrealToECEFTransform();
 }
 
-FTransform UMirrorCoordinatesBPFuncLibrary::ENULookAt(
-    const FVector& ENULonLatH,
+FTransform UMirrorCoordinatesBPFuncLibrary::ESULookAt(
+    const FVector& ESULonLatH,
     const FTransform& Transform,
     const FVector& LookAtLocation,
     double ArroundLookDirectionRotateAngle) {
@@ -102,29 +107,35 @@ FQuat UMirrorCoordinatesBPFuncLibrary::ArroundAxisRotation(
   return FQuat(Axis, FMath::DegreesToRadians(Angle));
 }
 
-FVector UMirrorCoordinatesBPFuncLibrary::ENUToENULocation(
-    const FVector& ENULonLatH,
-    const FVector& ToENULonLatH,
+FVector UMirrorCoordinatesBPFuncLibrary::ESUToESULocation(
+    const FVector& ESULonLatH,
+    const FVector& ToESULonLatH,
     const FVector& Location) {
   return FVector();
 }
 
-FVector UMirrorCoordinatesBPFuncLibrary::ENUToECEFLocation(
-    const FVector& ENULonLatH,
+FVector UMirrorCoordinatesBPFuncLibrary::ESUToECEFLocation(
+    const FVector& ESULonLatH,
     const FVector& Location) {
-  return FVector();
+  FTransform ESUTransform;
+  ESUTransform.SetLocation(Location);
+  FTransform ECEFTransform = ESUToECEFTransform(ESULonLatH, ESUTransform);
+  return ECEFTransform.GetLocation();
 }
 
-FVector UMirrorCoordinatesBPFuncLibrary::ENUToUnrealLocation(
-    const FVector& ENULonLatH,
+FVector UMirrorCoordinatesBPFuncLibrary::ESUToUnrealLocation(
+    const FVector& ESULonLatH,
     const FVector& Location) {
-  return FVector();
+  FTransform ESUTransform;
+  ESUTransform.SetLocation(Location);
+  FTransform UnrealTransform = ESUToUnrealTransform(ESULonLatH, ESUTransform);
+  return UnrealTransform.GetLocation();
 }
 
-FVector UMirrorCoordinatesBPFuncLibrary::ECEFToENULocation(
-    const FVector& ENULonLatH,
+FVector UMirrorCoordinatesBPFuncLibrary::ECEFToESULocation(
+    const FVector& ESULonLatH,
     const FVector& Location) {
-  return ENUToECEFTransform(ENULonLatH, FTransform())
+  return ESUToECEFTransform(ESULonLatH, FTransform())
       .InverseTransformPosition(Location);
 }
 
@@ -133,10 +144,10 @@ UMirrorCoordinatesBPFuncLibrary::ECEFToUnrealLocation(const FVector& Location) {
   return GetECEFToUnrealTransform().TransformPosition(Location);
 }
 
-FVector UMirrorCoordinatesBPFuncLibrary::UnrealToENULocation(
-    const FVector& ENULonLatH,
+FVector UMirrorCoordinatesBPFuncLibrary::UnrealToESULocation(
+    const FVector& ESULonLatH,
     const FVector& Location) {
-  return FVector();
+  return ECEFToESULocation(ESULonLatH, UnrealToECEFLocation(Location));
 }
 
 FVector
@@ -152,12 +163,23 @@ FQuat UMirrorCoordinatesBPFuncLibrary::CalculateQuatFromAxes(
       FMath::IsNearlyEqual(FVector::DotProduct(XAxis, YAxis), 0, 0.00001) &&
       FMath::IsNearlyEqual(FVector::DotProduct(XAxis, ZAxis), 0, 0.00001) &&
       FMath::IsNearlyEqual(FVector::DotProduct(YAxis, ZAxis), 0, 0.00001));
+  //bool bIsOrthogonal =
+  //    (XAxis | YAxis) == 0 && (XAxis | ZAxis) == 0 && (YAxis | ZAxis) == 0;
+  //bool bFollowsRightHandRule = (XAxis ^ YAxis) == ZAxis;
+  //if (!bIsOrthogonal || !bFollowsRightHandRule) {
+  //  UE_LOG(
+  //      LogTemp,
+  //      Error,
+  //      TEXT("Axes do not form a valid orthogonal right-handed basis."));
+  //  return FQuat::Identity; // Return identity quaternion as a fallback.
+  //}
+
   FMatrix Matrix = FMatrix(
       FPlane(XAxis.X, YAxis.X, ZAxis.X, 0),
       FPlane(XAxis.Y, YAxis.Y, ZAxis.Y, 0),
       FPlane(XAxis.Z, YAxis.Z, ZAxis.Z, 0),
       FPlane(0, 0, 0, 1));
-
+  FQuat Quat = Matrix.ToQuat().GetNormalized();
 
   return Matrix.GetTransposed().ToQuat().GetNormalized();
 }
