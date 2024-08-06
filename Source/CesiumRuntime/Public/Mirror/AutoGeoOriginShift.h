@@ -5,6 +5,7 @@
 #include "CesiumGeoreference.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "TimerManager.h"
 #include "AutoGeoOriginShift.generated.h"
 
 UCLASS()
@@ -51,6 +52,14 @@ public:
       FGeoreferenceOriginChangeDelegate,
       const FTransform& /*new transform*/);
   FGeoreferenceOriginChangeDelegate GeoreferenceOriginChangeDelegate;
+
+  UFUNCTION(BlueprintCallable)
+  void ChangeOrigin(const FVector& CameraInLonLatH);
+
+  UFUNCTION(BlueprintCallable)
+  void ResetDelay(const TArray<AActor*>& actor);
+
+  int changeDelayTick = 0;
 
 private:
   UPROPERTY(VisibleAnywhere)
