@@ -142,4 +142,7 @@ public:
   double AfterThrowClickStartTime = 0;
 
   double ThrowTime = 0;
+
+  FVector2D LeftMouseButtonPressedMousePosition;
+  FVector2D LeftMouseButtonReleasedMousePosition;
 };

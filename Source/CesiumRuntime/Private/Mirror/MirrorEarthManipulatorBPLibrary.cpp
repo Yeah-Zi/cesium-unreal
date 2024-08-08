@@ -380,11 +380,22 @@ UMirrorEarthManipulatorBPLibrary::GetManipulatorThrowECEFTransform(
       EarthPositionToEarthCenterDirection,
       AfterMoveEarthPositionToEarthCenterDirection);
 
+
+  // 不使用BeforeToAfterDirectionQuat.GetRotationAxis()， 精度丢失
+  FVector axis = FVector(
+      BeforeToAfterDirectionQuat.X,
+      BeforeToAfterDirectionQuat.Y,
+                     BeforeToAfterDirectionQuat.Z) /
+                 FMath::Sqrt(
+                     FMath::Pow(BeforeToAfterDirectionQuat.X, 2) +
+                     FMath::Pow(BeforeToAfterDirectionQuat.Y, 2) +
+                     FMath::Pow(BeforeToAfterDirectionQuat.Z, 2));
+
   FQuat ThrowQuat = FQuat(
-      BeforeToAfterDirectionQuat.GetRotationAxis(),
+      axis,
       BeforeToAfterDirectionQuat.GetAngle() * 7 >= PI
           ? (PI - 0.01)
-          : BeforeToAfterDirectionQuat.GetAngle() * 7);
+          : BeforeToAfterDirectionQuat.GetAngle() * 7 );
 
   FVector AfterThrowEarthPositionInCameraCoordinate =
       ThrowQuat * EarthPositionToEarthCenterDirection +

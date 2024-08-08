@@ -367,6 +367,7 @@ void UMirrorThrowInputHandler::TickComponent(
 
 void UMirrorThrowInputHandler::LeftMouseButtonPressed(
     FVector2D MouseScreenPosition) {
+    LeftMouseButtonPressedMousePosition = MouseScreenPosition;
     IsLeftMouseButtonPressed = true;
     APawn* Owner = Cast<APawn>(GetOwner());
     APlayerController* Controller =
@@ -399,7 +400,7 @@ void UMirrorThrowInputHandler::LeftMouseButtonPressed(
 
 void UMirrorThrowInputHandler::LeftMouseButtonReleased(
     FVector2D MouseScreenPosition) {
-
+    LeftMouseButtonReleasedMousePosition = MouseScreenPosition;
     if (!IsFirstCursorClickOnEarth) {
     return;
     }
