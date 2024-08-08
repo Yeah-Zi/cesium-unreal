@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "MirrorManipulatorInputHandler.h"
 #include "MirrorMoveManagerComponent.h"
+#include "../CesiumGlobeAnchorComponent.h"
 #include "MirrorEarthManipulator.generated.h"
 
 UCLASS()
@@ -23,22 +24,25 @@ protected:
 
 public:
   UPROPERTY(VisibleAnywhere)
-  UMirrorMoveManagerComponent* MoveManager;
+  UCesiumGlobeAnchorComponent* CesiumGlobeAnchorComponent = nullptr;
 
   UPROPERTY(VisibleAnywhere)
-  UMirrorDragInputHandler* DragInputHandler;
+  UMirrorMoveManagerComponent* MoveManager = nullptr;
 
   UPROPERTY(VisibleAnywhere)
-  UCameraComponent* Camera;
+  UMirrorDragInputHandler* DragInputHandler = nullptr;
 
   UPROPERTY(VisibleAnywhere)
-  UMirrorScaleInputHandler* ScaleInputHandler;
+  UCameraComponent* Camera = nullptr;
 
   UPROPERTY(VisibleAnywhere)
-  UMirrorRotateInputHandler* RotateInputHandler;
+  UMirrorScaleInputHandler* ScaleInputHandler = nullptr;
 
   UPROPERTY(VisibleAnywhere)
-  UMirrorThrowInputHandler* ThrowInputHandler;
+  UMirrorRotateInputHandler* RotateInputHandler = nullptr;
+
+  UPROPERTY(VisibleAnywhere)
+  UMirrorThrowInputHandler* ThrowInputHandler = nullptr;
   // Called every frame
   virtual void Tick(float DeltaTime) override;
 

@@ -9,6 +9,9 @@ AMirrorEarthManipulator::AMirrorEarthManipulator() {
   // Set this pawn to call Tick() every frame.  You can turn this off to improve
   // performance if you don't need it.
   PrimaryActorTick.bCanEverTick = true;
+  CesiumGlobeAnchorComponent =
+      CreateDefaultSubobject<UCesiumGlobeAnchorComponent>(TEXT("CesiumGlobeAnchorComponent"));
+  CesiumGlobeAnchorComponent->SetAdjustOrientationForGlobeWhenMoving(false);
 
   MoveManager =
       CreateDefaultSubobject<UMirrorMoveManagerComponent>(TEXT("MoveManager"));
