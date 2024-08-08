@@ -31,8 +31,13 @@ void AVirtualEarthActor::SetVirtualEarthRadii(const FVector& Radius) {
 
 AVirtualEarthActor* AVirtualEarthActor::GetWGS84VirtualEarth() {
   static AVirtualEarthActor* WGS84 = nullptr;
-  if (!WGS84 || !WGS84->IsValidLowLevelFast()) {
-    WGS84 = GWorld->SpawnActor<AVirtualEarthActor>();
+  if (!IsValid(WGS84)) {
+    FActorSpawnParameters Params;
+    Params.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    WGS84 = GWorld->SpawnActor<AVirtualEarthActor>(Params);
+    WGS84->SetActorLabel("WGS84VirtualEarth");
+    WGS84->AddToRoot();
   }
   WGS84->SetVirtualEarthRadii(UCesiumWgs84Ellipsoid::GetRadii());
   return WGS84;
@@ -41,8 +46,13 @@ AVirtualEarthActor* AVirtualEarthActor::GetWGS84VirtualEarth() {
 AVirtualEarthActor*
 AVirtualEarthActor::GetDynamicVirtualEarth(const FVector& Radius) {
   static AVirtualEarthActor* VirtualEarth = nullptr;
-  if (!VirtualEarth && !VirtualEarth->IsValidLowLevel()) {
-    VirtualEarth = GWorld->SpawnActor<AVirtualEarthActor>();
+  if (!IsValid(VirtualEarth)) {
+    FActorSpawnParameters Params;
+    Params.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    VirtualEarth = GWorld->SpawnActor<AVirtualEarthActor>(Params);
+    VirtualEarth->SetActorLabel("DynamicRadiusVirtualEarth");
+    VirtualEarth->AddToRoot();
   }
   VirtualEarth->SetVirtualEarthRadii(Radius);
   return VirtualEarth;
