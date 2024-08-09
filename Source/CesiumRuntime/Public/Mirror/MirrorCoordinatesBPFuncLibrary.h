@@ -350,4 +350,8 @@ public:
       Category = "Coordinates",
       meta = (BlueprintAutocast))
   static FTransform GetCameraTransform(UWorld* World);
+
+  UFUNCTION(BlueprintCallable)
+  static FTransform
+  GetFocusToCesium3DTilesetTransformInUnreal(ACesium3DTileset* Cesium3DTileset);
 };

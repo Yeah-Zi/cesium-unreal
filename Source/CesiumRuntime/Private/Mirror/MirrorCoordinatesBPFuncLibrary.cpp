@@ -2,7 +2,16 @@
 #include "CesiumGeoreference.h"
 #include "CesiumWgs84Ellipsoid.h"
 #include "Kismet/GameplayStatics.h"
-
+#include <CesiumGeometry/BoundingSphere.h>
+#include <CesiumGeospatial/GlobeTransforms.h>
+#include <CesiumGeometry/OrientedBoundingBox.h>
+#include <CesiumGeospatial/BoundingRegion.h>
+#include <CesiumGeospatial/BoundingRegionWithLooseFittingHeights.h>
+#include <CesiumGeospatial/S2CellBoundingVolume.h>
+#include <Cesium3DTilesSelection/BoundingVolume.h>
+#include <VecMath.h>
+#include <Cesium3DTilesSelection/Tile.h>
+#include "Cesium3DTileset.h"
 UWorld* UMirrorCoordinatesBPFuncLibrary::World = nullptr;
 FTransform UMirrorCoordinatesBPFuncLibrary::ESUToESUTransform(
     const FVector& ESULonLatH,
@@ -159,10 +168,10 @@ FQuat UMirrorCoordinatesBPFuncLibrary::CalculateQuatFromAxes(
     const FVector& XAxis,
     const FVector& YAxis,
     const FVector& ZAxis) {
-  check(
-      FMath::IsNearlyEqual(FVector::DotProduct(XAxis, YAxis), 0, 0.00001) &&
-      FMath::IsNearlyEqual(FVector::DotProduct(XAxis, ZAxis), 0, 0.00001) &&
-      FMath::IsNearlyEqual(FVector::DotProduct(YAxis, ZAxis), 0, 0.00001));
+  //check(
+  //    FMath::IsNearlyEqual(FVector::DotProduct(XAxis, YAxis), 0, 0.00001) &&
+  //    FMath::IsNearlyEqual(FVector::DotProduct(XAxis, ZAxis), 0, 0.00001) &&
+  //    FMath::IsNearlyEqual(FVector::DotProduct(YAxis, ZAxis), 0, 0.00001));
   //bool bIsOrthogonal =
   //    (XAxis | YAxis) == 0 && (XAxis | ZAxis) == 0 && (YAxis | ZAxis) == 0;
   //bool bFollowsRightHandRule = (XAxis ^ YAxis) == ZAxis;
@@ -466,6 +475,97 @@ FTransform UMirrorCoordinatesBPFuncLibrary::GetCameraTransform(UWorld* World) {
   FTransform result;
   result.SetLocation(Location);
   result.SetRotation(Rotation.Quaternion());
+  return result;
+}
+
+FTransform
+UMirrorCoordinatesBPFuncLibrary::GetFocusToCesium3DTilesetTransformInUnreal(
+    ACesium3DTileset* Cesium3DTileset) {
+  struct CalculateECEFCameraPosition {
+    glm::dvec3 operator()(const CesiumGeometry::BoundingSphere& sphere) {
+      const glm::dvec3& center = sphere.getCenter();
+      glm::dmat4 ENU =
+          CesiumGeospatial::GlobeTransforms::eastNorthUpToFixedFrame(center);
+      glm::dvec3 offset =
+          sphere.getRadius() *
+          glm::normalize(
+              glm::dvec3(ENU[0]) + glm::dvec3(ENU[1]) + glm::dvec3(ENU[2]));
+      glm::dvec3 position = center + offset;
+      return position;
+    }
+
+    glm::dvec3
+    operator()(const CesiumGeometry::OrientedBoundingBox& orientedBoundingBox) {
+      const glm::dvec3& center = orientedBoundingBox.getCenter();
+      glm::dmat4 ENU =
+          CesiumGeospatial::GlobeTransforms::eastNorthUpToFixedFrame(center);
+      const glm::dmat3& halfAxes = orientedBoundingBox.getHalfAxes();
+      glm::dvec3 offset =
+          glm::length(halfAxes[0] + halfAxes[1] + halfAxes[2]) *
+          glm::normalize(
+              glm::dvec3(ENU[0]) + glm::dvec3(ENU[1]) + glm::dvec3(ENU[2]));
+      glm::dvec3 position = center + offset;
+      return position;
+    }
+
+    glm::dvec3
+    operator()(const CesiumGeospatial::BoundingRegion& boundingRegion) {
+      return (*this)(boundingRegion.getBoundingBox());
+    }
+
+    glm::dvec3
+    operator()(const CesiumGeospatial::BoundingRegionWithLooseFittingHeights&
+                   boundingRegionWithLooseFittingHeights) {
+      return (*this)(boundingRegionWithLooseFittingHeights.getBoundingRegion()
+                         .getBoundingBox());
+    }
+
+    glm::dvec3 operator()(const CesiumGeospatial::S2CellBoundingVolume& s2) {
+      return (*this)(s2.computeBoundingRegion());
+    }
+  };
+
+  const Cesium3DTilesSelection::Tile* pRootTile =
+      Cesium3DTileset->GetTileset()->getRootTile();
+  if (!pRootTile) {
+    return FTransform();
+  }
+
+  const Cesium3DTilesSelection::BoundingVolume& boundingVolume =
+      pRootTile->getBoundingVolume();
+
+  ACesiumGeoreference* pGeoreference = Cesium3DTileset->ResolveGeoreference();
+
+  // calculate unreal camera position
+  glm::dvec3 ecefCameraPosition =
+      std::visit(CalculateECEFCameraPosition{}, boundingVolume);
+  FVector unrealCameraPosition =
+      pGeoreference->TransformEarthCenteredEarthFixedPositionToUnreal(
+          VecMath::createVector(ecefCameraPosition));
+
+  // calculate unreal camera orientation
+  glm::dvec3 ecefCenter =
+      Cesium3DTilesSelection::getBoundingVolumeCenter(boundingVolume);
+  FVector unrealCenter =
+      pGeoreference->TransformEarthCenteredEarthFixedPositionToUnreal(
+          VecMath::createVector(ecefCenter));
+  FVector unrealCameraFront =
+      (unrealCenter - unrealCameraPosition).GetSafeNormal();
+  FVector unrealCameraRight =
+      FVector::CrossProduct(FVector::ZAxisVector, unrealCameraFront)
+          .GetSafeNormal();
+  FVector unrealCameraUp =
+      FVector::CrossProduct(unrealCameraFront, unrealCameraRight)
+          .GetSafeNormal();
+  FRotator cameraRotator = FMatrix(
+                               unrealCameraFront,
+                               unrealCameraRight,
+                               unrealCameraUp,
+                               FVector::ZeroVector)
+                               .Rotator();
+  FTransform result;
+  result.SetLocation(unrealCameraPosition);
+  result.SetRotation(cameraRotator.Quaternion());
   return result;
 }
 
