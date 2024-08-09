@@ -26,11 +26,16 @@ public:
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
-  static AVirtualEarthActor* GetWGS84VirtualEarth();
+  static AVirtualEarthActor*
+  GetWGS84VirtualEarth(UObject* WorldContextObject);
 
   UFUNCTION(
       BlueprintCallable,
       Category = "Coordinates",
       meta = (BlueprintAutocast))
-  static AVirtualEarthActor* GetDynamicVirtualEarth(const FVector& Radius);
+  static AVirtualEarthActor*
+  GetDynamicVirtualEarth(UObject* WorldContextObject, const FVector& Radius);
+
+  protected:
+   virtual void BeginDestroy() override;
 };
