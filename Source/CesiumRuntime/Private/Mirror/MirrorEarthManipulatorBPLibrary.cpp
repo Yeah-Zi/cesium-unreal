@@ -112,6 +112,7 @@ UMirrorEarthManipulatorBPLibrary::GetManipulatorScaleECEFTransform(
     FHitResult HitResultInECEF;
     if (!UMirrorCoordinatesBPFuncLibrary::LineTraceVirtualEarthInECEF(
             AVirtualEarthActor::GetDynamicVirtualEarth(
+                GWorld,
                 FVector(FocusPositionRadius)),
             AfterScaleCursorPositionInECEFCoordinate,
             AfterScaleCursorPositionInECEFCoordinate +
