@@ -54,4 +54,12 @@ void AMirrorEarthManipulator::Tick(float DeltaTime) { Super::Tick(DeltaTime); }
 void AMirrorEarthManipulator::SetupPlayerInputComponent(
     UInputComponent* PlayerInputComponent) {
   Super::SetupPlayerInputComponent(PlayerInputComponent);
+  EnableInput(Cast<APlayerController>(GetController()));
+  DragInputHandler->RegisterInput(PlayerInputComponent);
+
+  ScaleInputHandler->RegisterInput(PlayerInputComponent);
+
+  RotateInputHandler->RegisterInput(PlayerInputComponent);
+
+  ThrowInputHandler->RegisterInput(PlayerInputComponent);
 }
