@@ -253,14 +253,36 @@ public class CesiumRuntime : ModuleRules
 
       foreach (string DllFile in Directory.EnumerateFiles(DllPath, "*.*", SearchOption.AllDirectories))
       {
-        RuntimeDependencies.Add(Path.Combine(TargetOutputDir, Path.GetFileName(DllFile)), Path.Combine(DllPath, DllFile));
+        RuntimeDependencies.Add(Path.Combine("$(TargetOutputDir)", Path.GetFileName(DllFile)), Path.Combine(DllPath, DllFile));
       }
+      // 设置需要打包的目录路径
+      string DirectoryToPackage = Path.Combine(ModuleDirectory, "../../Content/Javascript");
+      System.Console.WriteLine("YOYYY: " + DirectoryToPackage);
+
+      // 检查目录是否存在
+      if (Directory.Exists(DirectoryToPackage))
+      {
+        // 获取该目录下的所有文件，并添加到 RuntimeDependencies
+        foreach (string File in Directory.GetFiles(DirectoryToPackage, "*.*", SearchOption.AllDirectories))
+        {
+          RuntimeDependencies.Add(Path.Combine(Path.Combine(DirectoryToPackage,"/") , File));
+          System.Console.WriteLine("YOYYY: " + Path.Combine(Path.Combine(DirectoryToPackage, "/"), File));
+        }
+      }
+      else
+      {
+        System.Console.WriteLine("Directory does not exist: " + DirectoryToPackage);
+      }
+
+
       PublicIncludePaths.AddRange(
           new string[] {
                       Path.Combine(ModuleDirectory, "../ThirdParty/include"),
                       Path.Combine(ModuleDirectory, "../ThirdParty/include/v8")
           }
       );
+
+
     }
 
   }
