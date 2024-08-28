@@ -19,7 +19,7 @@ FTransform UMirrorCoordinatesBPFuncLibrary::ESUToESUTransform(
     const FVector& ToESULonLatH) {
   FTransform OriginESUTransform = ESUToECEFTransform(ESULonLatH, Transform);
   FTransform ToESUTransform = ESUToECEFTransform(ToESULonLatH, FTransform());
-  return OriginESUTransform * ToESUTransform.Inverse();
+  return OriginESUTransform * FTransform(ToESUTransform.ToInverseMatrixWithScale());
 }
 
 FTransform UMirrorCoordinatesBPFuncLibrary::ESUToECEFTransform(
@@ -49,7 +49,9 @@ FTransform UMirrorCoordinatesBPFuncLibrary::ESUToECEFTransform(
   FTransform ENUECEFTransform;
   ENUECEFTransform.SetLocation(ESUOriginInECEF);
   ENUECEFTransform.SetRotation(ESUQuatInECEF);
-  return Transform * (ENUToESUTransfrom * ENUECEFTransform);
+
+  FTransform ESUTOECEFTransform = (ENUToESUTransfrom * ENUECEFTransform);
+  return Transform * ESUTOECEFTransform;
 }
 
 FTransform UMirrorCoordinatesBPFuncLibrary::ESUToUnrealTransform(
@@ -65,7 +67,7 @@ FTransform UMirrorCoordinatesBPFuncLibrary::ECEFToESUTransform(
     const FTransform& Transform) {
   FTransform ESUECEFTransform = ESUToECEFTransform(ESULonLatH, FTransform());
 
-  return Transform * ESUECEFTransform.Inverse();
+  return Transform * FTransform(ESUECEFTransform.ToInverseMatrixWithScale());
 }
 
 FTransform UMirrorCoordinatesBPFuncLibrary::ECEFToUnrealTransform(
@@ -80,7 +82,7 @@ FTransform UMirrorCoordinatesBPFuncLibrary::UnrealToESUTransform(
   FTransform ECEFTransform = Transform * GetUnrealToECEFTransform();
 
   FTransform ESUECEFTransform = ESUToECEFTransform(ESULonLatH, FTransform());
-  return ECEFTransform * ESUECEFTransform.Inverse();
+  return ECEFTransform * FTransform(ESUECEFTransform.ToInverseMatrixWithScale());
 }
 
 FTransform UMirrorCoordinatesBPFuncLibrary::UnrealToECEFTransform(
