@@ -108,6 +108,21 @@ bool UMirrorObjectReflectionCallLib::SetObjectFNameProperty(
   return SetObjectProperty<FNameProperty>(Object, Property, Value);
 }
 
+bool UMirrorObjectReflectionCallLib::SetObjectFStructProperty(
+    UObject* Object,
+    FName Property,
+    void* Value) {
+  FProperty* Prop = Object->GetClass()->FindPropertyByName(Property);
+  if (!Prop) // if we found variable
+  {
+    return false;
+  }
+  Prop->SetValue_InContainer(Object, Value);
+  return true;
+
+  //return SetObjectProperty<FStructProperty>(Object, Property, Value);
+}
+
 bool UMirrorObjectReflectionCallLib::SetObjectFStrProperty(
     UObject* Object,
     FName Property,
@@ -125,6 +140,12 @@ bool UMirrorObjectReflectionCallLib::SetObjectFTextProperty(
 bool UMirrorObjectReflectionCallLib::SetObjectFEnumProperty(
     UObject* Object,
     FName Property,
-    uint8 Value) { 
+    uint8 Value) {
+  FProperty* Prop = Object->GetClass()->FindPropertyByName(Property);
+  if (!Prop) // if we found variable
+  {
+    return false;
+  }
+  Prop->SetValue_InContainer(Object, &Value);
   return false;
 }

@@ -143,9 +143,8 @@ public:
   static bool
   SetObjectFNameProperty(UObject* Object, FName Property, FName Value);
 
-  // UFUNCTION(BlueprintCallable, Category = "SetObjectFProperty")
-  // bool SetObjectFStructProperty(UObject* Object, FName Property, void*
-  // Value);
+  static bool SetObjectFStructProperty(UObject* Object, FName Property, void*
+   Value);
 
   static bool
   SetObjectFStrProperty(UObject* Object, FName Property, FString Value);
